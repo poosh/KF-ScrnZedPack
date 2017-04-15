@@ -15,10 +15,12 @@ simulated function PostBeginPlay()
 {
     super.PostBeginPlay();
     SyringeCount = 3; // no healing for mid-game bosses
+    Health *= 0.75; // less hp for mid-game bosses
 }
 
 function bool MakeGrandEntry()
 {
+    Health = HealthMax; // restore original hp
 	bEndGameBoss = true;
     SyringeCount = 0; // restore healing for end-game boss
 	return Super.MakeGrandEntry();
