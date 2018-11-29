@@ -590,6 +590,7 @@ defaultproperties
      ControllerClass=Class'ScrnZedPack.HardPatController'
      LODBias=4.000000
 	 MenuName="Hard Pat"
+     ScoringValue=1000
 
      // copy-pasted from ZombieBoss_STANDARD
      RocketFireSound=SoundGroup'KF_EnemiesFinalSnd.Patriarch.Kev_FireRocket'
