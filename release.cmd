@@ -24,7 +24,7 @@ mkdir %outputdir%\Sounds
 mkdir %outputdir%\StaticMeshes
 mkdir %outputdir%\System
 mkdir %outputdir%\Textures
-mkdir %outputdir%\uz2
+REM mkdir %outputdir%\uz2
 
 
 copy /y %KFDIR%\system\ScrnZedPack.* %outputdir%\System\
@@ -36,18 +36,18 @@ copy /y %STEAMDIR%\Textures\ScrnZedPack_T.utx %outputdir%\Textures\
 copy /y *.txt  %outputdir%
 
 
-echo Compressing to .uz2...
-%KFDIR%\system\ucc compress %KFDIR%\system\ScrnZedPack.u
-%KFDIR%\system\ucc compress %STEAMDIR%\Animations\ScrnZedPack_A.ukx
-%KFDIR%\system\ucc compress %STEAMDIR%\Sounds\ScrnZedPack_S.uax
-%KFDIR%\system\ucc compress %STEAMDIR%\StaticMeshes\ScrnZedPack_SM.usx
-%KFDIR%\system\ucc compress %STEAMDIR%\Textures\ScrnZedPack_T.utx
-
-move /y %KFDIR%\system\ScrnZedPack.u.uz2 %outputdir%\uz2
-move /y %STEAMDIR%\Animations\ScrnZedPack_A.ukx.uz2 %outputdir%\uz2
-move /y %STEAMDIR%\Sounds\ScrnZedPack_S.uax.uz2 %outputdir%\uz2
-move /y %STEAMDIR%\StaticMeshes\ScrnZedPack_SM.usx.uz2 %outputdir%\uz2
-move /y %STEAMDIR%\Textures\ScrnZedPack_T.utx.uz2 %outputdir%\uz2
+REM echo Compressing to .uz2...
+REM %KFDIR%\system\ucc compress %KFDIR%\system\ScrnZedPack.u
+REM %KFDIR%\system\ucc compress %STEAMDIR%\Animations\ScrnZedPack_A.ukx
+REM %KFDIR%\system\ucc compress %STEAMDIR%\Sounds\ScrnZedPack_S.uax
+REM %KFDIR%\system\ucc compress %STEAMDIR%\StaticMeshes\ScrnZedPack_SM.usx
+REM %KFDIR%\system\ucc compress %STEAMDIR%\Textures\ScrnZedPack_T.utx
+REM
+REM move /y %KFDIR%\system\ScrnZedPack.u.uz2 %outputdir%\uz2
+REM move /y %STEAMDIR%\Animations\ScrnZedPack_A.ukx.uz2 %outputdir%\uz2
+REM move /y %STEAMDIR%\Sounds\ScrnZedPack_S.uax.uz2 %outputdir%\uz2
+REM move /y %STEAMDIR%\StaticMeshes\ScrnZedPack_SM.usx.uz2 %outputdir%\uz2
+REM move /y %STEAMDIR%\Textures\ScrnZedPack_T.utx.uz2 %outputdir%\uz2
 
 echo Release is ready!
 
