@@ -1,7 +1,8 @@
 Class HardPat extends ZombieBoss;
 
 var transient float GiveUpTime;
-var byte MissilesLeft;
+var int MissilesLeft;
+var transient bool bFirstMissile;
 var bool bEndGameBoss,bMovingChaingunAttack;
 var(Sounds) sound SaveMeSound;
 
@@ -13,23 +14,23 @@ replication
 
 simulated function PostBeginPlay()
 {
-    super.PostBeginPlay();
-    SyringeCount = 3; // no healing for mid-game bosses
-    Health *= 0.75; // less hp for mid-game bosses
+	super.PostBeginPlay();
+	SyringeCount = 3; // no healing for mid-game bosses
+	Health *= 0.75; // less hp for mid-game bosses
 }
 
 function bool MakeGrandEntry()
 {
-    Health = HealthMax; // restore original hp
+	Health = HealthMax; // restore original hp
 	bEndGameBoss = true;
-    SyringeCount = 0; // restore healing for end-game boss
+	SyringeCount = 0; // restore healing for end-game boss
 	return Super.MakeGrandEntry();
 }
 function Died(Controller Killer, class<DamageType> damageType, vector HitLocation)
 {
-    Super(KFMonster).Died(Killer,damageType,HitLocation);
-    if ( bEndGameBoss )
-        KFGameType(Level.Game).DoBossDeath();
+	Super(KFMonster).Died(Killer,damageType,HitLocation);
+	if ( bEndGameBoss )
+		KFGameType(Level.Game).DoBossDeath();
 }
 
 simulated function bool HitCanInterruptAction()
@@ -84,7 +85,7 @@ function RangedAttack(Actor A)
 	else if( bChargingPlayer && (bOnlyE || D<200) )
 		Return;
 	else if( !bDesireChainGun && !bChargingPlayer && (D<300 || (D<700 && bOnlyE)) &&
-        (Level.TimeSeconds - LastChargeTime > (5.0 + 5.0 * FRand())) )  // Don't charge again for a few seconds
+		(Level.TimeSeconds - LastChargeTime > (5.0 + 5.0 * FRand())) )  // Don't charge again for a few seconds
 	{
 		SetAnimAction('transition');
 		GoToState('Charging');
@@ -122,10 +123,10 @@ function RangedAttack(Actor A)
 		SetAnimAction('PreFireMG');
 
 		HandleWaitForAnim('PreFireMG');
-        if ( bEndGameBoss )
-            MGFireCounter = Rand(60) + 35*(SyringeCount+1);
-        else
-            MGFireCounter = Rand(60) + 60;
+		if ( bEndGameBoss )
+			MGFireCounter = max(35, Rand(60) + 5 * Level.Game.GameDifficulty * (SyringeCount+1));
+		else
+			MGFireCounter = max(35, Rand(60) + 5 * Level.Game.GameDifficulty);
 
 
 		GoToState('FireChaingun');
@@ -253,8 +254,8 @@ state FireChaingun
 	function BeginState()
 	{
 		Super.BeginState();
-		bMovingChaingunAttack = (SyringeCount>=2);
-		bChargingPlayer = bEndGameBoss && SyringeCount>=3 && FRand()<0.4f;
+		bMovingChaingunAttack = Level.Game.GameDifficulty >= 4 && SyringeCount >= 2 && (bEndGameBoss || FRand() < 0.4);
+		bChargingPlayer = Level.Game.GameDifficulty >= 5 && bEndGameBoss && SyringeCount >= 3 && FRand() < 0.4f;
 		bCanStrafe = true;
 	}
 	function EndState()
@@ -269,7 +270,8 @@ state FireChaingun
 		Super(KFMonster).Tick(Delta);
 		if( bChargingPlayer )
 			GroundSpeed = OriginalGroundSpeed * 2.3;
-		else GroundSpeed = OriginalGroundSpeed * 1.15;
+		else
+			GroundSpeed = OriginalGroundSpeed * 1.15;
 	}
 	function AnimEnd( int Channel )
 	{
@@ -332,6 +334,14 @@ state FireChaingun
 			bWaitForAnim = true;
 		}
 	}
+
+	function FireMGShot()
+	{
+		super.FireMGShot();
+		// stop charging on killing the enemy
+		bChargingPlayer = bChargingPlayer && Controller.Enemy != none && Controller.Enemy.Health > 0;
+	}
+
 	function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector Momentum, class<DamageType> damageType, optional int HitIndex)
 	{
 		local float EnemyDistSq, DamagerDistSq;
@@ -412,7 +422,7 @@ Begin:
 		else
 		{
 			if( bFireAtWill )
-    				FireMGShot();
+				FireMGShot();
 			Sleep(0.05);
 		}
 	}
@@ -430,10 +440,19 @@ state FireMissile
 	}
 	function BeginState()
 	{
-        if ( bEndGameBoss )
-            MissilesLeft = SyringeCount+Rand(SyringeCount);
-        else
-            MissilesLeft = 1+Rand(3);
+		if ( bEndGameBoss ) {
+			MissilesLeft = 1 + Rand(SyringeCount+1);
+			if (SyringeCount > 1 && Level.Game.GameDifficulty >= 5) {
+				MissilesLeft += SyringeCount - 1;
+			}
+		}
+		else if (Level.Game.GameDifficulty >= 5) {
+			MissilesLeft = 1 + Rand(3);
+		}
+		else {
+			MissilesLeft = 1 + Rand(2);
+		}
+		bFirstMissile = true;
 		Acceleration = vect(0,0,0);
 	}
 
@@ -468,17 +487,17 @@ state FireMissile
 		SetAnimAction('FireEndMissile');
 		HandleWaitForAnim('FireEndMissile');
 
-		// Randomly send out a message about Patriarch shooting a rocket(5% chance)
-		if ( FRand() < 0.05 && Controller.Enemy != none && PlayerController(Controller.Enemy.Controller) != none )
+		// Randomly send out a message about Patriarch shooting a rocket
+		// More rockets-in-a-raw = higher chance.
+		if ( bFirstMissile && Controller.Enemy != none && PlayerController(Controller.Enemy.Controller) != none
+			&& frand() < 0.05 * MissilesLeft )
 		{
 			PlayerController(Controller.Enemy.Controller).Speech('AUTO', 10, "");
 		}
 
-		if( MissilesLeft==0 )
+		if( --MissilesLeft <= 0 )
 			GoToState('');
-		else
-		{
-			--MissilesLeft;
+		else {
 			GoToState(,'SecondMissile');
 		}
 	}
@@ -489,6 +508,7 @@ Begin:
 		Sleep(0.1);
 	}
 SecondMissile:
+	bFirstMissile = false;
 	Acceleration = vect(0,0,0);
 	Sleep(0.5f);
 	AnimEnd(0);
@@ -502,11 +522,11 @@ Ignores RangedAttack;
 	{
 		GiveUpTime = Level.TimeSeconds+20.f+FRand()*20.f;
 		Super.BeginState();
-        if ( bEndGameBoss ) {
-            bBlockActors = false;
-            // While escaping Pat doesn't blow up pipebombs -- PooSH
-            MotionDetectorThreat=0;
-        }
+		if ( bEndGameBoss ) {
+			bBlockActors = false;
+			// While escaping Pat doesn't blow up pipebombs -- PooSH
+			MotionDetectorThreat=0;
+		}
 	}
 	function EndState()
 	{
@@ -525,18 +545,18 @@ Ignores RangedAttack;
 		if( !bChargingPlayer )
 		{
 			bChargingPlayer = true;
-        		if( Level.NetMode!=NM_DedicatedServer )
-        			PostNetReceive();
-    		}
+				if( Level.NetMode!=NM_DedicatedServer )
+					PostNetReceive();
+			}
 		GroundSpeed = OriginalGroundSpeed * 2.5;
 		Global.Tick(Delta);
 	}
 
 	function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector Momentum, class<DamageType> damageType, optional int HitIndex)
 	{
-        if ( !bEndGameBoss )
-            global.TakeDamage(Damage,instigatedBy,hitlocation,Momentum,damageType);
-    }
+		if ( !bEndGameBoss )
+			global.TakeDamage(Damage,instigatedBy,hitlocation,Momentum,damageType);
+	}
 }
 
 State SneakAround
@@ -587,29 +607,29 @@ Begin:
 
 defaultproperties
 {
-     ControllerClass=Class'ScrnZedPack.HardPatController'
-     LODBias=4.000000
-	 MenuName="Hard Pat"
-     ScoringValue=1000
+	ControllerClass=Class'ScrnZedPack.HardPatController'
+	LODBias=4.000000
+	MenuName="Hard Pat"
+	ScoringValue=1000
 
-     // copy-pasted from ZombieBoss_STANDARD
-     RocketFireSound=SoundGroup'KF_EnemiesFinalSnd.Patriarch.Kev_FireRocket'
-     MiniGunFireSound=Sound'KF_BasePatriarch.Attack.Kev_MG_GunfireLoop'
-     MiniGunSpinSound=Sound'KF_BasePatriarch.Attack.Kev_MG_TurbineFireLoop'
-     MeleeImpaleHitSound=SoundGroup'KF_EnemiesFinalSnd.Patriarch.Kev_HitPlayer_Impale'
-     MoanVoice=SoundGroup'KF_EnemiesFinalSnd.Patriarch.Kev_Talk'
-     MeleeAttackHitSound=SoundGroup'KF_EnemiesFinalSnd.Patriarch.Kev_HitPlayer_Fist'
-     JumpSound=SoundGroup'KF_EnemiesFinalSnd.Patriarch.Kev_Jump'
-     DetachedArmClass=Class'KFChar.SeveredArmPatriarch'
-     DetachedLegClass=Class'KFChar.SeveredLegPatriarch'
-     DetachedHeadClass=Class'KFChar.SeveredHeadPatriarch'
-     DetachedSpecialArmClass=Class'KFChar.SeveredRocketArmPatriarch'
-     HitSound(0)=SoundGroup'KF_EnemiesFinalSnd.Patriarch.Kev_Pain'
-     DeathSound(0)=SoundGroup'KF_EnemiesFinalSnd.Patriarch.Kev_Death'
-     AmbientSound=Sound'KF_BasePatriarch.Idle.Kev_IdleLoop'
-     Mesh=SkeletalMesh'KF_Freaks_Trip.Patriarch_Freak'
-     Skins(0)=Combiner'KF_Specimens_Trip_T.gatling_cmb'
-     Skins(1)=Combiner'KF_Specimens_Trip_T.patriarch_cmb'
+	// copy-pasted from ZombieBoss_STANDARD
+	RocketFireSound=SoundGroup'KF_EnemiesFinalSnd.Patriarch.Kev_FireRocket'
+	MiniGunFireSound=Sound'KF_BasePatriarch.Attack.Kev_MG_GunfireLoop'
+	MiniGunSpinSound=Sound'KF_BasePatriarch.Attack.Kev_MG_TurbineFireLoop'
+	MeleeImpaleHitSound=SoundGroup'KF_EnemiesFinalSnd.Patriarch.Kev_HitPlayer_Impale'
+	MoanVoice=SoundGroup'KF_EnemiesFinalSnd.Patriarch.Kev_Talk'
+	MeleeAttackHitSound=SoundGroup'KF_EnemiesFinalSnd.Patriarch.Kev_HitPlayer_Fist'
+	JumpSound=SoundGroup'KF_EnemiesFinalSnd.Patriarch.Kev_Jump'
+	DetachedArmClass=Class'KFChar.SeveredArmPatriarch'
+	DetachedLegClass=Class'KFChar.SeveredLegPatriarch'
+	DetachedHeadClass=Class'KFChar.SeveredHeadPatriarch'
+	DetachedSpecialArmClass=Class'KFChar.SeveredRocketArmPatriarch'
+	HitSound(0)=SoundGroup'KF_EnemiesFinalSnd.Patriarch.Kev_Pain'
+	DeathSound(0)=SoundGroup'KF_EnemiesFinalSnd.Patriarch.Kev_Death'
+	AmbientSound=Sound'KF_BasePatriarch.Idle.Kev_IdleLoop'
+	Mesh=SkeletalMesh'KF_Freaks_Trip.Patriarch_Freak'
+	Skins(0)=Combiner'KF_Specimens_Trip_T.gatling_cmb'
+	Skins(1)=Combiner'KF_Specimens_Trip_T.patriarch_cmb'
 
-     SaveMeSound=sound'KF_EnemiesFinalSnd.Patriarch.Kev_SaveMe'
+	SaveMeSound=sound'KF_EnemiesFinalSnd.Patriarch.Kev_SaveMe'
 }

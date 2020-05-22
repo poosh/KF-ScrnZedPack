@@ -151,6 +151,7 @@ state Running
 
 function TakeDamage(int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector momentum, class<DamageType> DamType, optional int HitIndex)
 {
+    TeleportBlockTime = fmax(TeleportBlockTime, Level.TimeSeconds + 0.5);
     if (InstigatedBy == none || class<KFWeaponDamageType>(DamType) == none)
         Super(Monster).TakeDamage(Damage, instigatedBy, hitLocation, momentum, DamType); // skip NONE-reference error
     else
