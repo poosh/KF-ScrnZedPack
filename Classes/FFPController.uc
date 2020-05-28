@@ -12,14 +12,14 @@ var float prevRageTimer,prevRageThreshold;
 //(I know because as a medic I was doing it all the time. - Whisky)
 function FearThisSpot(AvoidMarker aSpot)
 {
-	local FemaleFP FFP;
-	FFP = FemaleFP(Pawn);
-	
-	if (!FFP.bChargingPlayer)
-	{
-		if ( Skill > 1 + 2.0 * FRand() )
-			super(Controller).FearThisSpot(aSpot);
-	}
+    local FemaleFP FFP;
+    FFP = FemaleFP(Pawn);
+    
+    if (!FFP.bChargingPlayer)
+    {
+        if ( Skill > 1 + 2.0 * FRand() )
+            super(Controller).FearThisSpot(aSpot);
+    }
 }
 
 function PostBeginPlay() 
@@ -50,37 +50,37 @@ state SpinAttack
 {
 ignores EnemyNotVisible, GetOutOfTheWayOfShot;
 
-	function DoSpinDamage()
-	{
-		local Actor A;
+    function DoSpinDamage()
+    {
+        local Actor A;
 
-		//log("FLESHPOUND DOSPINDAMAGE!");
-		foreach CollidingActors(class'actor', A, (KFM.MeleeRange * 1.5)+pawn.CollisionRadius, pawn.Location)
-			FemaleFP(pawn).SpinDamage(A);
-	}
+        //log("FLESHPOUND DOSPINDAMAGE!");
+        foreach CollidingActors(class'actor', A, (KFM.MeleeRange * 1.5)+pawn.CollisionRadius, pawn.Location)
+            FemaleFP(pawn).SpinDamage(A);
+    }
 
 Begin:
 
 WaitForAnim:
-	While( KFM.bShotAnim )
-	{
-		Sleep(0.1);
-		DoSpinDamage();
-	}
+    While( KFM.bShotAnim )
+    {
+        Sleep(0.1);
+        DoSpinDamage();
+    }
 
-	WhatToDoNext(152);
-	if ( bSoaking )
-		SoakStop("STUCK IN SPINATTACK!!!");
+    WhatToDoNext(152);
+    if ( bSoaking )
+        SoakStop("STUCK IN SPINATTACK!!!");
 }
 
 state ZombieCharge 
 {
     function BeginState() 
-	{
+    {
         super.BeginState();
 
         if (!bSmashDoor && ((bAttackedTarget && bMissTarget) || bFindNewEnemy || bStartled)) 
-		{
+        {
             RageFrustrationTimer= prevRageTimer;
             RageFrustrationThreshhold= prevRageThreshold;
         }
@@ -92,19 +92,19 @@ state ZombieCharge
     }
 
     function EndState() 
-	{
+    {
         prevRageTimer= RageFrustrationTimer;
         prevRageThreshold= RageFrustrationThreshhold;
     }
     
-	function Tick( float Delta )
-	{
-		local FemaleFP FFP;
+    function Tick( float Delta )
+    {
+        local FemaleFP FFP;
         
         Global.Tick(Delta);
 
         // Make the FP rage if we haven't reached our enemy after a certain amount of time
-		if( RageFrustrationTimer < RageFrustrationThreshhold ) {
+        if( RageFrustrationTimer < RageFrustrationThreshhold ) {
             RageFrustrationTimer += Delta;
 
             if( RageFrustrationTimer >= RageFrustrationThreshhold ) {
@@ -115,8 +115,8 @@ state ZombieCharge
                     FFP.bFrustrated = true;
                 }
             }
-		}
-	}    
+        }
+    }    
 }
 
 defaultproperties

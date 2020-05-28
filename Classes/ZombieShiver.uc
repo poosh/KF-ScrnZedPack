@@ -48,100 +48,100 @@ replication
 
 simulated function PostBeginPlay()
 {
-	Super.PostBeginPlay();
+    Super.PostBeginPlay();
 
-	if (Level.NetMode != NM_DedicatedServer)
-	{
-		MatAlphaSkin = ColorModifier(Level.ObjectPool.AllocateObject(class'ColorModifier'));
-		if (MatAlphaSkin != none)
-		{
-			MatAlphaSkin.Color = class'Canvas'.static.MakeColor(255, 255, 255, 255);
-			MatAlphaSkin.RenderTwoSided = false;
-			MatAlphaSkin.AlphaBlend = true;
-			MatAlphaSkin.Material = Skins[0];
-			Skins[0] = MatAlphaSkin;
-		}
-	}
+    if (Level.NetMode != NM_DedicatedServer)
+    {
+        MatAlphaSkin = ColorModifier(Level.ObjectPool.AllocateObject(class'ColorModifier'));
+        if (MatAlphaSkin != none)
+        {
+            MatAlphaSkin.Color = class'Canvas'.static.MakeColor(255, 255, 255, 255);
+            MatAlphaSkin.RenderTwoSided = false;
+            MatAlphaSkin.AlphaBlend = true;
+            MatAlphaSkin.Material = Skins[0];
+            Skins[0] = MatAlphaSkin;
+        }
+    }
 }
 
 simulated function PostNetReceive()
 {
     super.PostNetReceive();
 
-	if( bClientRunning != bRunning )
-	{
-		bClientRunning = bRunning;
-		if( bRunning ) {
+    if( bClientRunning != bRunning )
+    {
+        bClientRunning = bRunning;
+        if( bRunning ) {
             MovementAnims[0] = RunAnim;
-		}
-		else {
-			MovementAnims[0] = WalkAnim;
-		}
-	}
+        }
+        else {
+            MovementAnims[0] = WalkAnim;
+        }
+    }
 }
 
 simulated function Destroyed()
 {
-	if (Level.NetMode != NM_DedicatedServer && MatAlphaSkin != none)
-	{
-		Skins[0] = default.Skins[0];
-		Level.ObjectPool.FreeObject(MatAlphaSkin);
-	}
+    if (Level.NetMode != NM_DedicatedServer && MatAlphaSkin != none)
+    {
+        Skins[0] = default.Skins[0];
+        Level.ObjectPool.FreeObject(MatAlphaSkin);
+    }
 
-	Super.Destroyed();
+    Super.Destroyed();
 }
 
 simulated function StopBurnFX()
 {
-	if (bBurnApplied)
-	{
-		MatAlphaSkin.Material = Texture'PatchTex.Common.ZedBurnSkin';
-		Skins[0] = MatAlphaSkin;
-	}
+    if (bBurnApplied)
+    {
+        MatAlphaSkin.Material = Texture'PatchTex.Common.ZedBurnSkin';
+        Skins[0] = MatAlphaSkin;
+    }
 
-	Super.StopBurnFX();
+    Super.StopBurnFX();
 }
 
 function RangedAttack(Actor A)
 {
-	if (bShotAnim || Physics == PHYS_Swimming)
-		return;
-	else if (CanAttack(A))
-	{
-		bShotAnim = true;
-		SetAnimAction('Claw');
-		return;
-	}
+    if (bShotAnim || Physics == PHYS_Swimming)
+        return;
+    else if (CanAttack(A))
+    {
+        bShotAnim = true;
+        SetAnimAction('Claw');
+        return;
+    }
 }
 
 state Running
 {
-	function BeginState()
-	{
+    function BeginState()
+    {
         bRunning = true;
-		RunUntilTime = Level.TimeSeconds + PeriodRunBase + FRand() * PeriodRunRan;
+        RunUntilTime = Level.TimeSeconds + PeriodRunBase + FRand() * PeriodRunRan;
         MovementAnims[0] = RunAnim;
     }
 
-	function EndState()
-	{
+    function EndState()
+    {
         bRunning = false;
-		GroundSpeed = global.GetOriginalGroundSpeed();
-		RunCooldownEnd = Level.TimeSeconds + PeriodRunCoolBase + FRand() * PeriodRunCoolRan;
+        GroundSpeed = global.GetOriginalGroundSpeed();
+        RunCooldownEnd = Level.TimeSeconds + PeriodRunCoolBase + FRand() * PeriodRunCoolRan;
         MovementAnims[0] = WalkAnim;
-	}
+    }
 
     function float GetOriginalGroundSpeed()
     {
         return global.GetOriginalGroundSpeed() * 2.5;
     }
 
-	function Tick(float Delta)
-	{
-		Global.Tick(Delta);
-		if (RunUntilTime < Level.TimeSeconds)
-			GotoState('');
-		GroundSpeed = GetOriginalGroundSpeed();	}
+    function Tick(float Delta)
+    {
+        Global.Tick(Delta);
+        if (RunUntilTime < Level.TimeSeconds)
+            GotoState('');
+        GroundSpeed = GetOriginalGroundSpeed();    }
 
     function bool CanSpeedAdjust()
     {
@@ -171,101 +171,99 @@ simulated function bool AnimNeedsWait(name TestAnim)
 
 simulated function float GetOriginalGroundSpeed()
 {
-	local float result;
+    local float result;
 
-	result = OriginalGroundSpeed;
+    result = OriginalGroundSpeed;
 
-	if( bZedUnderControl )
-		result *= 1.25;
+    if( bZedUnderControl )
+        result *= 1.25;
 
-	if ( bBurnified )
-		result *= 0.8;
+    if ( bBurnified )
+        result *= 0.8;
 
-	return result;
+    return result;
 }
 
 simulated function Tick(float Delta)
 {
-	Super.Tick(Delta);
+    Super.Tick(Delta);
 
-	if (Health > 0 && !bBurnApplied)
-	{
-		// Handle targetting
-		if (Level.NetMode != NM_Client && !bDecapitated)
-		{
-			if (Controller == none || Controller.Target == none || !Controller.LineOfSightTo(Controller.Target))
-			{
-				if (bCanSeeTarget)
-					bCanSeeTarget = false;
-			}
-			else
-			{
-				if (!bCanSeeTarget)
-				{
-					bCanSeeTarget = true;
-					SeeTargetTime = Level.TimeSeconds;
-				}
-				else if (Level.TimeSeconds > SeeTargetTime + PeriodSeeTarget)
-				{
-					if (VSize(Controller.Target.Location - Location) < MaxTeleportDist)
-					{
-						if (VSize(Controller.Target.Location - Location) > MinTeleportDist || !Controller.ActorReachable(Controller.Target))
-						{
-							if (CanTeleport())
-								StartTelePort();
-						}
-						else
-						{
-							if (CanRun())
-								GotoState('Running');
-						}
-					}
-				}
-			}
-		}
-	}
+    if (Health > 0 && !bBurnApplied)
+    {
+        // Handle targetting
+        if (Level.NetMode != NM_Client && !bDecapitated) {
+            if (bCanSeeTarget && Controller == none || Controller.Target == none || !Controller.CanSee(Controller.Target))
+            {
+                bCanSeeTarget = false;
+            }
+            else
+            {
+                if (!bCanSeeTarget)
+                {
+                    bCanSeeTarget = true;
+                    SeeTargetTime = Level.TimeSeconds;
+                }
+                else if (Level.TimeSeconds > SeeTargetTime + PeriodSeeTarget)
+                {
+                    if (VSize(Controller.Target.Location - Location) < MaxTeleportDist)
+                    {
+                        if (VSize(Controller.Target.Location - Location) > MinTeleportDist || !Controller.ActorReachable(Controller.Target))
+                        {
+                            if (CanTeleport())
+                                StartTelePort();
+                        }
+                        else
+                        {
+                            if (CanRun())
+                                GotoState('Running');
+                        }
+                    }
+                }
+            }
+        }
+    }
 
-	// Handle client-side teleport variables
-	if (!bBurnApplied)
-	{
-		if (Level.NetMode != NM_DedicatedServer && OldFadeStage != FadeStage)
-		{
-			OldFadeStage = FadeStage;
+    // Handle client-side teleport variables
+    if (!bBurnApplied)
+    {
+        if (Level.NetMode != NM_DedicatedServer && OldFadeStage != FadeStage)
+        {
+            OldFadeStage = FadeStage;
 
-			if (FadeStage == 2)
-				AlphaFader = 0;
-			else
-				AlphaFader = 255;
-		}
+            if (FadeStage == 2)
+                AlphaFader = 0;
+            else
+                AlphaFader = 255;
+        }
 
-		// Handle teleporting
-		if (FadeStage == 1) // Fade out (pre-teleport)
-		{
-			AlphaFader = FMax(AlphaFader - Delta * 512, 0);
+        // Handle teleporting
+        if (FadeStage == 1) // Fade out (pre-teleport)
+        {
+            AlphaFader = FMax(AlphaFader - Delta * 512, 0);
 
-			if (Level.NetMode != NM_Client && AlphaFader == 0)
-			{
-				SetCollision(true, true);
-				FlashTeleport();
-				SetCollision(false, false);
-				FadeStage = 2;
-			}
-		}
-		else if (FadeStage == 2) // Fade in (post-teleport)
-		{
-			AlphaFader = FMin(AlphaFader + Delta * 512, 255);
+            if (Level.NetMode != NM_Client && AlphaFader == 0)
+            {
+                SetCollision(true, true);
+                FlashTeleport();
+                SetCollision(false, false);
+                FadeStage = 2;
+            }
+        }
+        else if (FadeStage == 2) // Fade in (post-teleport)
+        {
+            AlphaFader = FMin(AlphaFader + Delta * 512, 255);
 
-			if (Level.NetMode != NM_Client && AlphaFader == 255)
-			{
-				FadeStage = 0;
-				SetCollision(true, true);
-				GotoState('Running');
-			}
-		}
+            if (Level.NetMode != NM_Client && AlphaFader == 255)
+            {
+                FadeStage = 0;
+                SetCollision(true, true);
+                GotoState('Running');
+            }
+        }
 
-		if (Level.NetMode != NM_DedicatedServer && ColorModifier(Skins[0]) != none)
-			ColorModifier(Skins[0]).Color.A = AlphaFader;
-	}
+        if (Level.NetMode != NM_DedicatedServer && ColorModifier(Skins[0]) != none)
+            ColorModifier(Skins[0]).Color.A = AlphaFader;
+    }
 }
 
 /*
@@ -280,7 +278,7 @@ simulated function DebugHead()
     ClearStayingDebugLines();
     // based on head bone
     C = GetBoneCoords(HeadBone);
-		HeadLoc = C.Origin + (HeadHeight * HeadScale * C.XAxis) + HeadOffsetY * C.YAxis;
+        HeadLoc = C.Origin + (HeadHeight * HeadScale * C.XAxis) + HeadOffsetY * C.YAxis;
     DrawDebugSphere(HeadLoc, Radius, 16, 0, 100, 255);
     DrawStayingDebugLine(HeadLoc - Radius*vect(1,0,0), HeadLoc + Radius*vect(1,0,0), 0, 100, 255);
     DrawStayingDebugLine(HeadLoc - Radius*vect(0,1,0), HeadLoc + Radius*vect(0,1,0), 0, 100, 255);
@@ -304,188 +302,188 @@ function bool CanTeleport()
 
 function bool CanRun()
 {
-	return (!bFlashTeleporting && !IsInState('Running') && RunCooldownEnd < Level.TimeSeconds);
+    return (!bFlashTeleporting && !IsInState('Running') && RunCooldownEnd < Level.TimeSeconds);
 }
 
 function bool IsHeadShot(vector loc, vector ray, float AdditionalScale)
 {
-	local coords C;
-	local vector HeadLoc, B, M, diff;
-	local float t, DotMM, Distance;
-	local int look;
-	local bool bUseAltHeadShotLocation;
-	local bool bWasAnimating;
+    local coords C;
+    local vector HeadLoc, B, M, diff;
+    local float t, DotMM, Distance;
+    local int look;
+    local bool bUseAltHeadShotLocation;
+    local bool bWasAnimating;
 
-	if (HeadBone == '')
-		return False;
+    if (HeadBone == '')
+        return False;
 
-	// If we are a dedicated server estimate what animation is most likely playing on the client
-	if (Level.NetMode == NM_DedicatedServer)
-	{
-		if (Physics == PHYS_Falling)
-			PlayAnim(AirAnims[0], 1.0, 0.0);
-		else if (Physics == PHYS_Walking)
-		{
-			// Only play the idle anim if we're not already doing a different anim.
-			// This prevents anims getting interrupted on the server and borking things up - Ramm
+    // If we are a dedicated server estimate what animation is most likely playing on the client
+    if (Level.NetMode == NM_DedicatedServer)
+    {
+        if (Physics == PHYS_Falling)
+            PlayAnim(AirAnims[0], 1.0, 0.0);
+        else if (Physics == PHYS_Walking)
+        {
+            // Only play the idle anim if we're not already doing a different anim.
+            // This prevents anims getting interrupted on the server and borking things up - Ramm
 
-			if( !IsAnimating(0) && !IsAnimating(1) )
-			{
-				if (bIsCrouched)
-				{
-					PlayAnim(IdleCrouchAnim, 1.0, 0.0);
-				}
-				else
-				{
-					bUseAltHeadShotLocation=true;
-				}
-			}
-			else
-			{
-				bWasAnimating = true;
-			}
+            if( !IsAnimating(0) && !IsAnimating(1) )
+            {
+                if (bIsCrouched)
+                {
+                    PlayAnim(IdleCrouchAnim, 1.0, 0.0);
+                }
+                else
+                {
+                    bUseAltHeadShotLocation=true;
+                }
+            }
+            else
+            {
+                bWasAnimating = true;
+            }
 
-			if ( bDoTorsoTwist )
-			{
-				SmoothViewYaw = Rotation.Yaw;
-				SmoothViewPitch = ViewPitch;
+            if ( bDoTorsoTwist )
+            {
+                SmoothViewYaw = Rotation.Yaw;
+                SmoothViewPitch = ViewPitch;
 
-				look = (256 * ViewPitch) & 65535;
-				if (look > 32768)
-					look -= 65536;
+                look = (256 * ViewPitch) & 65535;
+                if (look > 32768)
+                    look -= 65536;
 
-				SetTwistLook(0, look);
-			}
-		}
-		else if (Physics == PHYS_Swimming)
-			PlayAnim(SwimAnims[0], 1.0, 0.0);
+                SetTwistLook(0, look);
+            }
+        }
+        else if (Physics == PHYS_Swimming)
+            PlayAnim(SwimAnims[0], 1.0, 0.0);
 
-		if( !bWasAnimating )
-		{
-			SetAnimFrame(0.5);
-		}
-	}
+        if( !bWasAnimating )
+        {
+            SetAnimFrame(0.5);
+        }
+    }
 
-	if( bUseAltHeadShotLocation )
-	{
-		HeadLoc = Location + (OnlineHeadshotOffset >> Rotation);
-		AdditionalScale *= OnlineHeadshotScale;
-	}
-	else
-	{
-		C = GetBoneCoords(HeadBone);
+    if( bUseAltHeadShotLocation )
+    {
+        HeadLoc = Location + (OnlineHeadshotOffset >> Rotation);
+        AdditionalScale *= OnlineHeadshotScale;
+    }
+    else
+    {
+        C = GetBoneCoords(HeadBone);
 
-		HeadLoc = C.Origin + (HeadHeight * HeadScale * AdditionalScale * C.XAxis)
+        HeadLoc = C.Origin + (HeadHeight * HeadScale * AdditionalScale * C.XAxis)
             + HeadOffsetY * C.YAxis;
-	}
-	//ServerHeadLocation = HeadLoc;
+    }
+    //ServerHeadLocation = HeadLoc;
 
-	// Express snipe trace line in terms of B + tM
-	B = loc;
-	M = ray * (2.0 * CollisionHeight + 2.0 * CollisionRadius);
+    // Express snipe trace line in terms of B + tM
+    B = loc;
+    M = ray * (2.0 * CollisionHeight + 2.0 * CollisionRadius);
 
-	// Find Point-Line Squared Distance
-	diff = HeadLoc - B;
-	t = M Dot diff;
-	if (t > 0)
-	{
-		DotMM = M dot M;
-		if (t < DotMM)
-		{
-			t = t / DotMM;
-			diff = diff - (t * M);
-		}
-		else
-		{
-			t = 1;
-			diff -= M;
-		}
-	}
-	else
-		t = 0;
+    // Find Point-Line Squared Distance
+    diff = HeadLoc - B;
+    t = M Dot diff;
+    if (t > 0)
+    {
+        DotMM = M dot M;
+        if (t < DotMM)
+        {
+            t = t / DotMM;
+            diff = diff - (t * M);
+        }
+        else
+        {
+            t = 1;
+            diff -= M;
+        }
+    }
+    else
+        t = 0;
 
-	Distance = Sqrt(diff Dot diff);
+    Distance = Sqrt(diff Dot diff);
 
-	return (Distance < (HeadRadius * HeadScale * AdditionalScale));
+    return (Distance < (HeadRadius * HeadScale * AdditionalScale));
 }
 
 function StartTeleport()
 {
-	FadeStage = 1;
-	AlphaFader = 255;
-	SetCollision(false, false);
-	bFlashTeleporting = true;
+    FadeStage = 1;
+    AlphaFader = 255;
+    SetCollision(false, false);
+    bFlashTeleporting = true;
 }
 
 function FlashTeleport()
 {
-	local Actor Target;
-	local vector OldLoc;
-	local vector NewLoc;
-	local vector HitLoc;
-	local vector HitNorm;
-	local rotator RotOld;
-	local rotator RotNew;
-	local float LandTargetDist;
-	local int iEndAngle;
-	local int iAttempts;
+    local Actor Target;
+    local vector OldLoc;
+    local vector NewLoc;
+    local vector HitLoc;
+    local vector HitNorm;
+    local rotator RotOld;
+    local rotator RotNew;
+    local float LandTargetDist;
+    local int iEndAngle;
+    local int iAttempts;
 
-	if (Controller == none || Controller.Target == none)
-		return;
+    if (Controller == none || Controller.Target == none)
+        return;
 
-	Target = Controller.Target;
-	RotOld = rotator(Target.Location - Location);
-	RotNew = RotOld;
-	OldLoc = Location;
+    Target = Controller.Target;
+    RotOld = rotator(Target.Location - Location);
+    RotNew = RotOld;
+    OldLoc = Location;
 
-	for (iEndAngle = 0; iEndAngle < MaxTeleportAngles; iEndAngle++)
-	{
-		RotNew = RotOld;
-		RotNew.Yaw += iEndAngle * (65536 / MaxTelePortAngles);
+    for (iEndAngle = 0; iEndAngle < MaxTeleportAngles; iEndAngle++)
+    {
+        RotNew = RotOld;
+        RotNew.Yaw += iEndAngle * (65536 / MaxTelePortAngles);
 
-		for (iAttempts = 0; iAttempts < MaxTeleportAttempts; iAttempts++)
-		{
-			LandTargetDist = Target.CollisionRadius + CollisionRadius +
-				MinLandDist + (MaxLandDist - MinLandDist) * (iAttempts / (MaxTeleportAttempts - 1.0));
+        for (iAttempts = 0; iAttempts < MaxTeleportAttempts; iAttempts++)
+        {
+            LandTargetDist = Target.CollisionRadius + CollisionRadius +
+                MinLandDist + (MaxLandDist - MinLandDist) * (iAttempts / (MaxTeleportAttempts - 1.0));
 
-			NewLoc = Target.Location - vector(RotNew) * LandTargetDist; // Target.Location - Location
-			NewLoc.Z = Target.Location.Z;
+            NewLoc = Target.Location - vector(RotNew) * LandTargetDist; // Target.Location - Location
+            NewLoc.Z = Target.Location.Z;
 
-			if (Trace(HitLoc, HitNorm, NewLoc + vect(0, 0, -500), NewLoc) != none)
-				NewLoc.Z = HitLoc.Z + CollisionHeight;
+            if (Trace(HitLoc, HitNorm, NewLoc + vect(0, 0, -500), NewLoc) != none)
+                NewLoc.Z = HitLoc.Z + CollisionHeight;
 
-			// Try a new location
-			if (SetLocation(NewLoc))
-			{
-				SetPhysics(PHYS_Walking);
+            // Try a new location
+            if (SetLocation(NewLoc))
+            {
+                SetPhysics(PHYS_Walking);
 
-				if (Controller.PointReachable(Target.Location))
-				{
-					Velocity = vect(0, 0, 0);
-					Acceleration = vect(0, 0, 0);
-					SetRotation(rotator(Target.Location - Location));
+                if (Controller.PointReachable(Target.Location))
+                {
+                    Velocity = vect(0, 0, 0);
+                    Acceleration = vect(0, 0, 0);
+                    SetRotation(rotator(Target.Location - Location));
 
-					PlaySound(Sound'ScrnZedPack_S.Shiver.ShiverWarpGroup', SLOT_Interact, 4.0);
-					Controller.GotoState('');
-					MonsterController(Controller).WhatToDoNext(0);
-					goto Teleported;
-				}
-			}
+                    PlaySound(Sound'ScrnZedPack_S.Shiver.ShiverWarpGroup', SLOT_Interact, 4.0);
+                    Controller.GotoState('');
+                    MonsterController(Controller).WhatToDoNext(0);
+                    goto Teleported;
+                }
+            }
 
-			// Reset location
-			SetLocation(OldLoc);
-		}
-	}
+            // Reset location
+            SetLocation(OldLoc);
+        }
+    }
 
 Teleported:
 
-	bFlashTeleporting = false;
-	LastFlashTime = Level.TimeSeconds;
+    bFlashTeleporting = false;
+    LastFlashTime = Level.TimeSeconds;
 }
 
 function Died(Controller Killer, class<DamageType> damageType, vector HitLocation)
 {
-	// (!)
+    // (!)
     Super.Died(Killer, damageType, HitLocation);
 }
 
@@ -512,117 +510,117 @@ function RemoveHead()
                 KFPlayerController(LastDamagedBy.Controller), self);
         }
     }
-	if (IsInState('Running'))
-		GotoState('');
-	Super.RemoveHead();
+    if (IsInState('Running'))
+        GotoState('');
+    Super.RemoveHead();
 }
 
 function bool FlipOver()
 {
-	if ( super.FlipOver() ) {
-		TeleportBlockTime = Level.TimeSeconds + 4.0; // can't teleport during stun
+    if ( super.FlipOver() ) {
+        TeleportBlockTime = Level.TimeSeconds + 4.0; // can't teleport during stun
         // do not rotate while stunned
         Controller.Focus = none;
         Controller.FocalPoint = Location + 512*vector(Rotation);
-	}
+    }
     return false;
 }
 
 function PlayTakeHit(vector HitLocation, int Damage, class<DamageType> DamType)
 {
-	if (Level.TimeSeconds - LastPainSound > MinTimeBetweenPainSounds)
-	{
-		LastPainSound = Level.TimeSeconds;
-		PlaySound(HitSound[0], SLOT_Pain, 1.25,,400);
-	}
+    if (Level.TimeSeconds - LastPainSound > MinTimeBetweenPainSounds)
+    {
+        LastPainSound = Level.TimeSeconds;
+        PlaySound(HitSound[0], SLOT_Pain, 1.25,,400);
+    }
 
-	if (!IsInState('Running') && Level.TimeSeconds - LastPainAnim > MinTimeBetweenPainAnims)
-	{
-		PlayDirectionalHit(HitLocation);
-		LastPainAnim = Level.TimeSeconds;
-	}
+    if (!IsInState('Running') && Level.TimeSeconds - LastPainAnim > MinTimeBetweenPainAnims)
+    {
+        PlayDirectionalHit(HitLocation);
+        LastPainAnim = Level.TimeSeconds;
+    }
 }
 
 simulated function int DoAnimAction( name AnimName )
 {
-	if (AnimName=='Claw' || AnimName=='Claw2' || AnimName=='Claw3')
-	{
-		AnimBlendParams(1, 1.0, 0.1,, FireRootBone);
-		PlayAnim(AnimName,, 0.1, 1);
-		return 1;
-	}
+    if (AnimName=='Claw' || AnimName=='Claw2' || AnimName=='Claw3')
+    {
+        AnimBlendParams(1, 1.0, 0.1,, FireRootBone);
+        PlayAnim(AnimName,, 0.1, 1);
+        return 1;
+    }
 
-	return Super.DoAnimAction(AnimName);
+    return Super.DoAnimAction(AnimName);
 }
 
 defaultproperties
 {
-     WalkAnim="ClotWalk"
-     RunAnim="Run"
-     MaxHeadTime=0.100000
-     MaxTilt=10000.000000
-     MaxTurn=20000.000000
-     bDelayedReaction=True
-     PeriodSeeTarget=2.000000
-     PeriodRunBase=4.000000
-     PeriodRunRan=4.000000
-     PeriodRunCoolBase=4.000000
-     PeriodRunCoolRan=3.000000
-     AlphaFader=255.000000
-     MinTeleportDist=550.000000
-     MaxTeleportDist=2000.000000
-     MinLandDist=150.000000
-     MaxLandDist=500.000000
-     MaxTeleportAttempts=3
-     MaxTeleportAngles=3
-     MoanVoice=SoundGroup'ScrnZedPack_S.Shiver.ShiverTalkGroup'
-     bCannibal=True
-     MeleeDamage=8
-     damageForce=5000
-     KFRagdollName="Clot_Trip"
-     JumpSound=SoundGroup'KF_EnemiesFinalSnd.clot.Clot_Jump'
-     CrispUpThreshhold=9
-     PuntAnim="ClotPunt"
-     Intelligence=BRAINS_Mammal
-     bUseExtendedCollision=True
-     ColOffset=(Z=48.000000)
-     ColRadius=25.000000
-     ColHeight=5.000000
-     ExtCollAttachBoneName="Collision_Attach"
-     SeveredArmAttachScale=0.800000
-     SeveredLegAttachScale=0.800000
-     SeveredHeadAttachScale=0.800000
-     DetachedArmClass=Class'ScrnZedPack.SeveredArmShiver'
-     DetachedLegClass=Class'ScrnZedPack.SeveredLegShiver'
-     DetachedHeadClass=Class'ScrnZedPack.SeveredHeadShiver'
-     HeadRadius=8.0
-     HeadHeight=3.0
-     HeadScale=1.300000
-     HeadOffsetY=-3
-     OnlineHeadshotOffset=(X=19.000000,Z=39.000000)
-     OnlineHeadshotScale=1.4
-     MotionDetectorThreat=0.340000
-     HitSound(0)=SoundGroup'ScrnZedPack_S.Shiver.ShiverPainGroup'
-     DeathSound(0)=SoundGroup'ScrnZedPack_S.Shiver.ShiverDeathGroup'
-     ChallengeSound(0)=SoundGroup'ScrnZedPack_S.Shiver.ShiverTalkGroup'
-     ChallengeSound(1)=SoundGroup'ScrnZedPack_S.Shiver.ShiverTalkGroup'
-     ChallengeSound(2)=SoundGroup'ScrnZedPack_S.Shiver.ShiverTalkGroup'
-     ChallengeSound(3)=SoundGroup'ScrnZedPack_S.Shiver.ShiverTalkGroup'
-     ScoringValue=15
-     GroundSpeed=100.000000
-     WaterSpeed=100.000000
-     AccelRate=1024.000000
-     JumpZ=340.000000
-     HealthMax=300
-     Health=300
-     PlayerCountHealthScale=0.200000
+    WalkAnim="ClotWalk"
+    RunAnim="Run"
+    MaxHeadTime=0.100000
+    MaxTilt=10000.000000
+    MaxTurn=20000.000000
+    bDelayedReaction=True
+    PeriodSeeTarget=2.000000
+    PeriodRunBase=4.000000
+    PeriodRunRan=4.000000
+    PeriodRunCoolBase=4.000000
+    PeriodRunCoolRan=3.000000
+    AlphaFader=255.000000
+    MinTeleportDist=550.000000
+    MaxTeleportDist=2000.000000
+    MinLandDist=150.000000
+    MaxLandDist=500.000000
+    MaxTeleportAttempts=3
+    MaxTeleportAngles=3
+    MoanVoice=SoundGroup'ScrnZedPack_S.Shiver.ShiverTalkGroup'
+    bCannibal=True
+    MeleeDamage=8
+    damageForce=5000
+    KFRagdollName="Clot_Trip"
+    JumpSound=SoundGroup'KF_EnemiesFinalSnd.clot.Clot_Jump'
+    CrispUpThreshhold=9
+    PuntAnim="ClotPunt"
+    Intelligence=BRAINS_Mammal
+    bUseExtendedCollision=True
+    ColOffset=(Z=48.000000)
+    ColRadius=25.000000
+    ColHeight=5.000000
+    ExtCollAttachBoneName="Collision_Attach"
+    SeveredArmAttachScale=0.800000
+    SeveredLegAttachScale=0.800000
+    SeveredHeadAttachScale=0.800000
+    DetachedArmClass=Class'ScrnZedPack.SeveredArmShiver'
+    DetachedLegClass=Class'ScrnZedPack.SeveredLegShiver'
+    DetachedHeadClass=Class'ScrnZedPack.SeveredHeadShiver'
+    HeadRadius=8.0
+    HeadHeight=3.0
+    HeadScale=1.300000
+    HeadOffsetY=-3
+    OnlineHeadshotOffset=(X=19.000000,Z=39.000000)
+    OnlineHeadshotScale=1.4
+    MotionDetectorThreat=0.340000
+    HitSound(0)=SoundGroup'ScrnZedPack_S.Shiver.ShiverPainGroup'
+    DeathSound(0)=SoundGroup'ScrnZedPack_S.Shiver.ShiverDeathGroup'
+    ChallengeSound(0)=SoundGroup'ScrnZedPack_S.Shiver.ShiverTalkGroup'
+    ChallengeSound(1)=SoundGroup'ScrnZedPack_S.Shiver.ShiverTalkGroup'
+    ChallengeSound(2)=SoundGroup'ScrnZedPack_S.Shiver.ShiverTalkGroup'
+    ChallengeSound(3)=SoundGroup'ScrnZedPack_S.Shiver.ShiverTalkGroup'
+    ScoringValue=15
+    GroundSpeed=100.000000
+    WaterSpeed=100.000000
+    AccelRate=1024.000000
+    JumpZ=340.000000
+    HealthMax=300
+    Health=300
+    PlayerCountHealthScale=0.200000
 
-     MenuName="Shiver.se"
-     MovementAnims(0)="ClotWalk"
-     AmbientSound=SoundGroup'ScrnZedPack_S.Shiver.ShiverIdleGroup'
-     Mesh=SkeletalMesh'ScrnZedPack_A.ShiverMesh'
-     DrawScale=1.100000
-     PrePivot=(Z=5.000000)
-     Skins(0)=Combiner'ScrnZedPack_T.Shiver.CmbRemoveAlpha'
-     RotationRate=(Yaw=45000,Roll=0)
+    MenuName="Shiver.se"
+    MovementAnims(0)="ClotWalk"
+    AmbientSound=SoundGroup'ScrnZedPack_S.Shiver.ShiverIdleGroup'
+    Mesh=SkeletalMesh'ScrnZedPack_A.ShiverMesh'
+    DrawScale=1.100000
+    PrePivot=(Z=5.000000)
+    Skins(0)=Combiner'ScrnZedPack_T.Shiver.CmbRemoveAlpha'
+    RotationRate=(Yaw=45000,Roll=0)
 }

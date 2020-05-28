@@ -4,8 +4,8 @@ class ZombieClot_GRITTIER extends ZombieClot;
 defaultproperties
 {
     DetachedArmClass="SeveredArmClot"
-	DetachedLegClass="SeveredLegClot"
-	DetachedHeadClass="SeveredHeadClot"
+    DetachedLegClass="SeveredLegClot"
+    DetachedHeadClass="SeveredHeadClot"
 
     Mesh=SkeletalMesh'KF_Freaks_Trip.CLOT_Freak'
 
@@ -14,7 +14,7 @@ defaultproperties
     AmbientSound=Sound'KF_BaseClot.Clot_Idle1Loop'//Sound'KFPlayerSound.Zombiesbreath'//
     MoanVoice=Sound'KF_EnemiesFinalSnd.Clot_Talk'
     JumpSound=Sound'KF_EnemiesFinalSnd.Clot_Jump'
-	MeleeAttackHitSound=sound'KF_EnemiesFinalSnd.Clot_HitPlayer'
+    MeleeAttackHitSound=sound'KF_EnemiesFinalSnd.Clot_HitPlayer'
 
     HitSound(0)=Sound'KF_EnemiesFinalSnd.Clot_Pain'
     DeathSound(0)=Sound'KF_EnemiesFinalSnd.Clot_Death'

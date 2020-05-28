@@ -3,7 +3,7 @@ class BrainDeadFemaleFP extends FemaleFP;
 
 event PostBeginPlay()
 {
-	Super.PostBeginPlay();
+    Super.PostBeginPlay();
 
     SetMovementPhysics();
 }

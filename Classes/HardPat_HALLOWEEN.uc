@@ -8,8 +8,8 @@ class HardPat_HALLOWEEN extends HardPat;
 
 simulated function CloakBoss()
 {
-	local Controller C;
-	local int Index;
+    local Controller C;
+    local int Index;
 
     // No cloaking if zapped
     if( bZapped )
@@ -17,102 +17,102 @@ simulated function CloakBoss()
         return;
     }
 
-	if ( bSpotted )
-	{
-		Visibility = 120;
+    if ( bSpotted )
+    {
+        Visibility = 120;
 
-		if ( Level.NetMode==NM_DedicatedServer )
-		{
-			Return;
-		}
+        if ( Level.NetMode==NM_DedicatedServer )
+        {
+            Return;
+        }
 
-		Skins[0] = Finalblend'KFX.StalkerGlow';
-		Skins[1] = Finalblend'KFX.StalkerGlow';
-		Skins[2] = Finalblend'KFX.StalkerGlow';
-		bUnlit = true;
+        Skins[0] = Finalblend'KFX.StalkerGlow';
+        Skins[1] = Finalblend'KFX.StalkerGlow';
+        Skins[2] = Finalblend'KFX.StalkerGlow';
+        bUnlit = true;
 
-		return;
-	}
+        return;
+    }
 
-	Visibility = 1;
-	bCloaked = true;
+    Visibility = 1;
+    bCloaked = true;
 
-	if ( Level.NetMode!=NM_Client )
-	{
-		for ( C=Level.ControllerList; C!=None; C=C.NextController )
-		{
-			if ( C.bIsPlayer && C.Enemy==Self )
-			{
-				C.Enemy = None; // Make bots lose sight with me.
-			}
-		}
-	}
+    if ( Level.NetMode!=NM_Client )
+    {
+        for ( C=Level.ControllerList; C!=None; C=C.NextController )
+        {
+            if ( C.bIsPlayer && C.Enemy==Self )
+            {
+                C.Enemy = None; // Make bots lose sight with me.
+            }
+        }
+    }
 
-	if( Level.NetMode==NM_DedicatedServer )
-	{
-		Return;
-	}
+    if( Level.NetMode==NM_DedicatedServer )
+    {
+        Return;
+    }
 
     Skins[1] = Shader'KF_Specimens_Trip_HALLOWEEN_T.Patriarch.Patriarch_Halloween_Invisible';
-	Skins[0] = Shader'KF_Specimens_Trip_T.patriarch_invisible_gun';
+    Skins[0] = Shader'KF_Specimens_Trip_T.patriarch_invisible_gun';
 
-	// Invisible - no shadow
-	if(PlayerShadow != none)
-	{
-		PlayerShadow.bShadowActive = false;
-	}
+    // Invisible - no shadow
+    if(PlayerShadow != none)
+    {
+        PlayerShadow.bShadowActive = false;
+    }
 
-	// Remove/disallow projectors on invisible people
-	Projectors.Remove(0, Projectors.Length);
-	bAcceptsProjectors = false;
-	SetOverlayMaterial(FinalBlend'KF_Specimens_Trip_T.patriarch_fizzle_FB', 1.0, true);
+    // Remove/disallow projectors on invisible people
+    Projectors.Remove(0, Projectors.Length);
+    bAcceptsProjectors = false;
+    SetOverlayMaterial(FinalBlend'KF_Specimens_Trip_T.patriarch_fizzle_FB', 1.0, true);
 
-	// Randomly send out a message about Patriarch going invisible(10% chance)
-	if ( FRand() < 0.10 )
-	{
-		// Pick a random Player to say the message
-		Index = Rand(Level.Game.NumPlayers);
+    // Randomly send out a message about Patriarch going invisible(10% chance)
+    if ( FRand() < 0.10 )
+    {
+        // Pick a random Player to say the message
+        Index = Rand(Level.Game.NumPlayers);
 
-		for ( C = Level.ControllerList; C != none; C = C.NextController )
-		{
-			if ( PlayerController(C) != none )
-			{
-				if ( Index == 0 )
-				{
-					PlayerController(C).Speech('AUTO', 8, "");
-					break;
-				}
+        for ( C = Level.ControllerList; C != none; C = C.NextController )
+        {
+            if ( PlayerController(C) != none )
+            {
+                if ( Index == 0 )
+                {
+                    PlayerController(C).Speech('AUTO', 8, "");
+                    break;
+                }
 
-				Index--;
-			}
-		}
-	}
+                Index--;
+            }
+        }
+    }
 }
 
 // Speech notifies called from the anims
 function PatriarchKnockDown()
 {
-	PlaySound(SoundGroup'KF_EnemiesFinalSnd_HALLOWEEN.Patriarch.Kev_KnockedDown', SLOT_Misc, 2.0,true,500.0);
+    PlaySound(SoundGroup'KF_EnemiesFinalSnd_HALLOWEEN.Patriarch.Kev_KnockedDown', SLOT_Misc, 2.0,true,500.0);
 }
 
 function PatriarchEntrance()
 {
-	PlaySound(SoundGroup'KF_EnemiesFinalSnd_HALLOWEEN.Patriarch.Kev_Entrance', SLOT_Misc, 2.0,true,500.0);
+    PlaySound(SoundGroup'KF_EnemiesFinalSnd_HALLOWEEN.Patriarch.Kev_Entrance', SLOT_Misc, 2.0,true,500.0);
 }
 
 function PatriarchVictory()
 {
-	PlaySound(SoundGroup'KF_EnemiesFinalSnd_HALLOWEEN.Patriarch.Kev_Victory', SLOT_Misc, 2.0,true,500.0);
+    PlaySound(SoundGroup'KF_EnemiesFinalSnd_HALLOWEEN.Patriarch.Kev_Victory', SLOT_Misc, 2.0,true,500.0);
 }
 
 function PatriarchMGPreFire()
 {
-	PlaySound(SoundGroup'KF_EnemiesFinalSnd_HALLOWEEN.Patriarch.Kev_WarnGun', SLOT_Misc, 2.0,true,1000.0);
+    PlaySound(SoundGroup'KF_EnemiesFinalSnd_HALLOWEEN.Patriarch.Kev_WarnGun', SLOT_Misc, 2.0,true,1000.0);
 }
 
 function PatriarchMisslePreFire()
 {
-	PlaySound(SoundGroup'KF_EnemiesFinalSnd_HALLOWEEN.Patriarch.Kev_WarnRocket', SLOT_Misc, 2.0,true,1000.0);
+    PlaySound(SoundGroup'KF_EnemiesFinalSnd_HALLOWEEN.Patriarch.Kev_WarnRocket', SLOT_Misc, 2.0,true,1000.0);
 }
 
 // Taunt to use when doing the melee exploit radial attack
@@ -147,7 +147,7 @@ defaultproperties
      DetachedHeadClass=Class'KFChar.SeveredHeadPatriarch_HALLOWEEN'
      HitSound(0)=SoundGroup'KF_EnemiesFinalSnd_HALLOWEEN.Patriarch.Kev_Pain'
      DeathSound(0)=SoundGroup'KF_EnemiesFinalSnd_HALLOWEEN.Patriarch.Kev_Death'
-	 MenuName="Hard Sheriff"
+     MenuName="Hard Sheriff"
      AmbientSound=Sound'KF_BasePatriarch_HALLOWEEN.Kev_IdleLoop'
      Mesh=SkeletalMesh'KF_Freaks_Trip_HALLOWEEN.Patriarch_Halloween'
      Skins(0)=Combiner'KF_Specimens_Trip_T.gatling_cmb'

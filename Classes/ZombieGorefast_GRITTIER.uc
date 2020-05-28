@@ -72,8 +72,8 @@ CheckCharge:
 defaultproperties
 {
     DetachedArmClass=class'SeveredArmGorefast'
-	DetachedLegClass=class'SeveredLegGorefast'
-	DetachedHeadClass=class'SeveredHeadGorefast'
+    DetachedLegClass=class'SeveredLegGorefast'
+    DetachedHeadClass=class'SeveredHeadGorefast'
 
     Mesh=SkeletalMesh'KF_Freaks_Trip.GoreFast_Freak'
 

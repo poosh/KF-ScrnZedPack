@@ -4,7 +4,7 @@ class ZombieSiren_GRITTIER extends ZombieSiren;
 defaultproperties
 {
     DetachedLegClass=class'SeveredLegSiren'
-	DetachedHeadClass=class'SeveredHeadSiren'
+    DetachedHeadClass=class'SeveredHeadSiren'
 
     Mesh=SkeletalMesh'KF_Freaks_Trip.Siren_Freak'
 

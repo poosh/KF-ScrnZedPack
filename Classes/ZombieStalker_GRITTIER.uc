@@ -159,8 +159,8 @@ static simulated function PreCacheMaterials(LevelInfo myLevel)
 defaultproperties
 {
     DetachedArmClass=class'SeveredArmStalker'
-	DetachedLegClass=class'SeveredLegStalker'
-	DetachedHeadClass=class'SeveredHeadStalker'
+    DetachedLegClass=class'SeveredLegStalker'
+    DetachedHeadClass=class'SeveredHeadStalker'
 
     Mesh=SkeletalMesh'KF_Freaks_Trip.Stalker_Freak'
     Skins(0) = Shader'ScrnZedPack_T.stalker_grittier.stalker_grittier_invisible'//Combiner'KF_Specimens_Trip_T.stalker_cmb'//Shader 'KFCharacters.StalkerHairShader'
@@ -169,7 +169,7 @@ defaultproperties
     AmbientSound=Sound'KF_BaseStalker.Stalker_IdleLoop'
     MoanVoice=Sound'KF_EnemiesFinalSnd.Stalker_Talk'
     JumpSound=Sound'KF_EnemiesFinalSnd.Stalker_Jump'
-	MeleeAttackHitSound=sound'KF_EnemiesFinalSnd.Stalker_HitPlayer'
+    MeleeAttackHitSound=sound'KF_EnemiesFinalSnd.Stalker_HitPlayer'
 
     HitSound(0)=Sound'KF_EnemiesFinalSnd.Stalker_Pain'
     DeathSound(0)=Sound'KF_EnemiesFinalSnd.Stalker_Death'

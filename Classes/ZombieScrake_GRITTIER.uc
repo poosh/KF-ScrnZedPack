@@ -4,9 +4,9 @@ class ZombieScrake_GRITTIER extends ZombieScrake;
 defaultproperties
 {
     DetachedArmClass=class'SeveredArmScrake'
-	DetachedSpecialArmClass=class'SeveredArmScrakeSaw'
-	DetachedLegClass=class'SeveredLegScrake'
-	DetachedHeadClass=class'SeveredHeadScrake'
+    DetachedSpecialArmClass=class'SeveredArmScrakeSaw'
+    DetachedLegClass=class'SeveredLegScrake'
+    DetachedHeadClass=class'SeveredHeadScrake'
 
     Mesh=SkeletalMesh'KF_Freaks_Trip.Scrake_Freak'
 

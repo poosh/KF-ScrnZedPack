@@ -1,15 +1,15 @@
 /*
-	This object is used to load bRagdolls config variable
-	Clients, who have no config (and probabaly have no karma data), 
-	will have karma ragdoll death animations turned off.
-	
-	@author PooSH 
-	@author Marco 
+    This object is used to load bRagdolls config variable
+    Clients, who have no config (and probabaly have no karma data), 
+    will have karma ragdoll death animations turned off.
+    
+    @author PooSH 
+    @author Marco 
 */
 
 Class FFPKarma extends Object
-	Config(FemaleFPMut)
-	PerObjectConfig;
+    Config(FemaleFPMut)
+    PerObjectConfig;
 
 var config bool bRagdolls;
 var config bool bAutoDetect;
@@ -18,9 +18,9 @@ var private bool bHasInit,bRagdoll;
 
 static final function InitConfig(LevelInfo Level)
 {
-	local FFPKarma D;
+    local FFPKarma D;
 
-	Default.bHasInit = true;
+    Default.bHasInit = true;
 
     if ( Level.NetMode == NM_DedicatedServer ) {
         Default.bRagdoll = false;
@@ -50,9 +50,9 @@ static final function InitConfig(LevelInfo Level)
 }
 static final function bool UseRagdoll(LevelInfo Level)
 {
-	if( !Default.bHasInit )
-		InitConfig(Level);
-	return Default.bRagdoll;
+    if( !Default.bHasInit )
+        InitConfig(Level);
+    return Default.bRagdoll;
 }
 
 defaultproperties

@@ -25,13 +25,13 @@ static simulated function PreCacheMaterials(LevelInfo myLevel)
     myLevel.AddPrecacheMaterial(default.UncloakFBMat);
     myLevel.AddPrecacheMaterial(default.GlowFX);
 
-	myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_T.stalker_env_cmb');
-	myLevel.AddPrecacheMaterial(Texture'KF_Specimens_Trip_T.stalker_diff');
-	myLevel.AddPrecacheMaterial(Texture'KF_Specimens_Trip_T.stalker_spec');
-	myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_T.StalkerCloakOpacity_cmb');
-	myLevel.AddPrecacheMaterial(Material'KF_Specimens_Trip_T.StalkerCloakEnv_rot');
-	myLevel.AddPrecacheMaterial(Material'KF_Specimens_Trip_T.stalker_opacity_osc');
-	myLevel.AddPrecacheMaterial(Material'KFCharacters.StalkerSkin');
+    myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_T.stalker_env_cmb');
+    myLevel.AddPrecacheMaterial(Texture'KF_Specimens_Trip_T.stalker_diff');
+    myLevel.AddPrecacheMaterial(Texture'KF_Specimens_Trip_T.stalker_spec');
+    myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_T.StalkerCloakOpacity_cmb');
+    myLevel.AddPrecacheMaterial(Material'KF_Specimens_Trip_T.StalkerCloakEnv_rot');
+    myLevel.AddPrecacheMaterial(Material'KF_Specimens_Trip_T.stalker_opacity_osc');
+    myLevel.AddPrecacheMaterial(Material'KFCharacters.StalkerSkin');
 }
 
 
@@ -64,37 +64,37 @@ simulated function CloakStalker()
         return;
     }
 
-	if ( bSpotted ) {
-		if( Level.NetMode == NM_DedicatedServer )
-			return;
+    if ( bSpotted ) {
+        if( Level.NetMode == NM_DedicatedServer )
+            return;
 
-		Skins[0] = GlowFX;
-		Skins[1] = GlowFX;
-		bUnlit = true;
-	}
+        Skins[0] = GlowFX;
+        Skins[1] = GlowFX;
+        bUnlit = true;
+    }
     else if ( !bDecapitated && !bCrispified ) // No head, no cloak, honey.  updated :  Being charred means no cloak either :D
-	{
-		Visibility = 1;
-		bCloaked = true;
+    {
+        Visibility = 1;
+        bCloaked = true;
 
-		if( Level.NetMode == NM_DedicatedServer )
-			Return;
+        if( Level.NetMode == NM_DedicatedServer )
+            Return;
 
-		Skins[0] = InvisibleMat;
-		Skins[1] = InvisibleMat;
+        Skins[0] = InvisibleMat;
+        Skins[1] = InvisibleMat;
         bUnlit = false;
 
-		// Invisible - no shadow
-		if(PlayerShadow != none)
-			PlayerShadow.bShadowActive = false;
-		if(RealTimeShadow != none)
-			RealTimeShadow.Destroy();
+        // Invisible - no shadow
+        if(PlayerShadow != none)
+            PlayerShadow.bShadowActive = false;
+        if(RealTimeShadow != none)
+            RealTimeShadow.Destroy();
 
-		// Remove/disallow projectors on invisible people
-		Projectors.Remove(0, Projectors.Length);
-		bAcceptsProjectors = false;
-		SetOverlayMaterial(Material'KFX.FBDecloakShader', 0.25, true);
-	}
+        // Remove/disallow projectors on invisible people
+        Projectors.Remove(0, Projectors.Length);
+        bAcceptsProjectors = false;
+        SetOverlayMaterial(Material'KFX.FBDecloakShader', 0.25, true);
+    }
 }
 
 simulated function UnCloakStalker()
@@ -104,64 +104,64 @@ simulated function UnCloakStalker()
         return;
     }
 
-	if( !bCrispified )
-	{
-		LastUncloakTime = Level.TimeSeconds;
+    if( !bCrispified )
+    {
+        LastUncloakTime = Level.TimeSeconds;
 
-		Visibility = default.Visibility;
-		bCloaked = false;
-		bUnlit = false;
+        Visibility = default.Visibility;
+        bCloaked = false;
+        bUnlit = false;
 
-		// 25% chance of our Enemy saying something about us being invisible
-		if( Level.NetMode!=NM_Client && !KFGameType(Level.Game).bDidStalkerInvisibleMessage && FRand()<0.25 && Controller.Enemy!=none &&
-		 PlayerController(Controller.Enemy.Controller)!=none )
-		{
-			PlayerController(Controller.Enemy.Controller).Speech('AUTO', 17, "");
-			KFGameType(Level.Game).bDidStalkerInvisibleMessage = true;
-		}
-		if( Level.NetMode == NM_DedicatedServer )
-			Return;
+        // 25% chance of our Enemy saying something about us being invisible
+        if( Level.NetMode!=NM_Client && !KFGameType(Level.Game).bDidStalkerInvisibleMessage && FRand()<0.25 && Controller.Enemy!=none &&
+         PlayerController(Controller.Enemy.Controller)!=none )
+        {
+            PlayerController(Controller.Enemy.Controller).Speech('AUTO', 17, "");
+            KFGameType(Level.Game).bDidStalkerInvisibleMessage = true;
+        }
+        if( Level.NetMode == NM_DedicatedServer )
+            Return;
 
-		if ( Skins[0] != UncloakMat )
-		{
-			Skins[1] = FinalBlend'KF_Specimens_Trip_T.stalker_fb';
-			Skins[0] = UncloakMat;
+        if ( Skins[0] != UncloakMat )
+        {
+            Skins[1] = FinalBlend'KF_Specimens_Trip_T.stalker_fb';
+            Skins[0] = UncloakMat;
 
-			if (PlayerShadow != none)
-				PlayerShadow.bShadowActive = true;
+            if (PlayerShadow != none)
+                PlayerShadow.bShadowActive = true;
 
-			bAcceptsProjectors = true;
+            bAcceptsProjectors = true;
 
-			SetOverlayMaterial(Material'KFX.FBDecloakShader', 0.25, true);
-		}
-	}
+            SetOverlayMaterial(Material'KFX.FBDecloakShader', 0.25, true);
+        }
+    }
 }
 
 function RemoveHead()
 {
-	Super(KFMonster).RemoveHead();
+    Super(KFMonster).RemoveHead();
 
-	if (!bCrispified)
-	{
-		Skins[1] = UncloakFBMat;
-		Skins[0] = UncloakMat;
-	}
+    if (!bCrispified)
+    {
+        Skins[1] = UncloakFBMat;
+        Skins[0] = UncloakMat;
+    }
 }
 
 simulated function PlayDying(class<DamageType> DamageType, vector HitLoc)
 {
-	Super(KFMonster).PlayDying(DamageType,HitLoc);
+    Super(KFMonster).PlayDying(DamageType,HitLoc);
 
-	if(bUnlit)
-		bUnlit=!bUnlit;
+    if(bUnlit)
+        bUnlit=!bUnlit;
 
     LocalKFHumanPawn = none;
 
-	if (!bCrispified)
-	{
-		Skins[1] = UncloakFBMat;
-		Skins[0] = UncloakMat;
-	}
+    if (!bCrispified)
+    {
+        Skins[1] = UncloakFBMat;
+        Skins[0] = UncloakMat;
+    }
 }
 
 
@@ -169,7 +169,7 @@ simulated function Tick(float DeltaTime)
 {
     local float DistanceSqr;
     
-	Super(KFMonster).Tick(DeltaTime);
+    Super(KFMonster).Tick(DeltaTime);
     
     // Keep the stalker moving toward its target when attacking
     if( Role == ROLE_Authority && bShotAnim && !bWaitForAnim && !bZapped ) {
@@ -178,16 +178,16 @@ simulated function Tick(float DeltaTime)
         }
     } 
     
-	if( Level.NetMode==NM_DedicatedServer )
-		Return; // Servers aren't intrested in this info.
+    if( Level.NetMode==NM_DedicatedServer )
+        Return; // Servers aren't intrested in this info.
 
     if( bZapped ) {
         // Make sure we check if we need to be cloaked as soon as the zap wears off
         NextCheckTime = Level.TimeSeconds;
     }
-	else if( Level.TimeSeconds > NextCheckTime && Health > 0 )
-	{
-		NextCheckTime = Level.TimeSeconds + 0.5;
+    else if( Level.TimeSeconds > NextCheckTime && Health > 0 )
+    {
+        NextCheckTime = Level.TimeSeconds + 0.5;
 
         bSpotted = false;
         if ( LocalKFHumanPawn != none ) {
@@ -213,7 +213,7 @@ simulated function Tick(float DeltaTime)
                 CloakStalker();
             }
         }
-	}
+    }
 }
 
 

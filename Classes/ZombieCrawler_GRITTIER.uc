@@ -21,8 +21,8 @@ function TakeDamage(int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector mo
 defaultproperties
 {
     DetachedArmClass=class'SeveredArmCrawler'
-	DetachedLegClass=class'SeveredLegCrawler'
-	DetachedHeadClass=class'SeveredHeadCrawler'
+    DetachedLegClass=class'SeveredLegCrawler'
+    DetachedHeadClass=class'SeveredHeadCrawler'
 
     Mesh=SkeletalMesh'KF_Freaks_Trip.Crawler_Freak'
 

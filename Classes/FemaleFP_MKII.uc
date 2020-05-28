@@ -73,41 +73,41 @@ function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector M
         super(KFMonster).TakeDamage(Damage, instigatedBy, hitLocation, momentum, damageType);
 
 
-	Damage = OldHealth - Health;
+    Damage = OldHealth - Health;
 
-	// Starts charging if single damage > 300 or health drops below 50% on hard difficulty or below,
-	// or health <75% on Suicidal/HoE
-	// -- PooSH
+    // Starts charging if single damage > 300 or health drops below 50% on hard difficulty or below,
+    // or health <75% on Suicidal/HoE
+    // -- PooSH
     if ( Health > 0 && !bDecapitated && !bChargingPlayer
-			&& !bZapped && (!(bCrispified && bBurnified) || bFrustrated)
-			&& (Damage > RageDamageThreshold || Health < HealthMax*0.5
-				|| (Level.Game.GameDifficulty >= 5.0 && Health < HealthMax*0.75)) )
+            && !bZapped && (!(bCrispified && bBurnified) || bFrustrated)
+            && (Damage > RageDamageThreshold || Health < HealthMax*0.5
+                || (Level.Game.GameDifficulty >= 5.0 && Health < HealthMax*0.75)) )
         StartCharging();
 }
 
 simulated function DeviceGoRed()
 {
     Skins[3]=Shader'ScrnZedPack_T.FFP.FFPLights_Blue_shader';
-	Skins[1]=Combiner'ScrnZedPack_T.FFP.FFP_Metal_B_cmb';
+    Skins[1]=Combiner'ScrnZedPack_T.FFP.FFP_Metal_B_cmb';
     Skins[4]=Shader'ScrnZedPack_T.FFP.FFP_Skin1_B_Sdr';
 }
 
 simulated function DeviceGoNormal()
 {
     Skins[3]=Shader'ScrnZedPack_T.FFP.FFPLights_Green_shader';
-	Skins[1]=Combiner'ScrnZedPack_T.FFP.FFP_Metal_G_cmb';
+    Skins[1]=Combiner'ScrnZedPack_T.FFP.FFP_Metal_G_cmb';
     Skins[4]=Shader'ScrnZedPack_T.FFP.FFP_Skin1_Sdr';
 }
 
 static simulated function PreCacheMaterials(LevelInfo myLevel)
 {
-	myLevel.AddPrecacheMaterial(Texture'ScrnZedPack_T.FFP.BraTexture');
-	myLevel.AddPrecacheMaterial(Combiner'ScrnZedPack_T.FFP.FFP_Metal_G_cmb');
-	myLevel.AddPrecacheMaterial(Combiner'ScrnZedPack_T.FFP.FFP_Metal_B_cmb');
-	myLevel.AddPrecacheMaterial(Shader'ScrnZedPack_T.FFP.FFPLights_Green_shader');
-	myLevel.AddPrecacheMaterial(Shader'ScrnZedPack_T.FFP.FFPLights_Blue_shader');
-	myLevel.AddPrecacheMaterial(Shader'ScrnZedPack_T.FFP.FFP_Skin1_Sdr');
-	myLevel.AddPrecacheMaterial(Shader'ScrnZedPack_T.FFP.FFP_Skin1_B_Sdr');
+    myLevel.AddPrecacheMaterial(Texture'ScrnZedPack_T.FFP.BraTexture');
+    myLevel.AddPrecacheMaterial(Combiner'ScrnZedPack_T.FFP.FFP_Metal_G_cmb');
+    myLevel.AddPrecacheMaterial(Combiner'ScrnZedPack_T.FFP.FFP_Metal_B_cmb');
+    myLevel.AddPrecacheMaterial(Shader'ScrnZedPack_T.FFP.FFPLights_Green_shader');
+    myLevel.AddPrecacheMaterial(Shader'ScrnZedPack_T.FFP.FFPLights_Blue_shader');
+    myLevel.AddPrecacheMaterial(Shader'ScrnZedPack_T.FFP.FFP_Skin1_Sdr');
+    myLevel.AddPrecacheMaterial(Shader'ScrnZedPack_T.FFP.FFP_Skin1_B_Sdr');
 }
 
 defaultproperties
