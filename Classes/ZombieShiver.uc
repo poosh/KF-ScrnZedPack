@@ -18,11 +18,10 @@ var float HeadOffsetY;
 
 var transient bool bRunning, bClientRunning;
 var bool bDelayedReaction;
-var bool bCanSeeTarget;
-var float SeeTargetTime;
+var transient bool bCanSeeEnamy;
+var transient float ChargeEnemyTime;
 var float RunUntilTime;
 var float RunCooldownEnd;
-var float PeriodSeeTarget;
 var float PeriodRunBase;
 var float PeriodRunRan;
 var float PeriodRunCoolBase;
@@ -34,7 +33,7 @@ var byte OldFadeStage;
 var float AlphaFader;
 var bool bFlashTeleporting;
 var float LastFlashTime;
-var float MinTeleportDist, MaxTeleportDist;
+var float MinTeleportDistSq, MaxTeleportDistSq;
 var float MinLandDist, MaxLandDist; // How close we can teleport to the target (collision cylinders are taken into account)
 var int MaxTeleportAttempts; // Attempts per angle
 var int MaxTeleportAngles;
@@ -141,12 +140,25 @@ state Running
         Global.Tick(Delta);
         if (RunUntilTime < Level.TimeSeconds)
             GotoState('');
-        GroundSpeed = GetOriginalGroundSpeed();    }
+        GroundSpeed = GetOriginalGroundSpeed();
+    }
 
     function bool CanSpeedAdjust()
     {
         return false;
     }
+
+    function bool CanRun()
+    {
+        return false;
+    }
+
+    function RemoveHead()
+    {
+        GotoState('');
+        global.RemoveHead();
+    }
+
 }
 
 function TakeDamage(int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector momentum, class<DamageType> DamType, optional int HitIndex)
@@ -186,38 +198,29 @@ simulated function float GetOriginalGroundSpeed()
 
 simulated function Tick(float Delta)
 {
+    local float DistSq;
+    local bool bSeeEnemyNow;
+
     Super.Tick(Delta);
 
-    if (Health > 0 && !bBurnApplied)
-    {
-        // Handle targetting
-        if (Level.NetMode != NM_Client && !bDecapitated) {
-            if (bCanSeeTarget && Controller == none || Controller.Target == none || !Controller.CanSee(Controller.Target))
-            {
-                bCanSeeTarget = false;
+    if ( Role == ROLE_Authority && !bDecapitated && !bBurnApplied && Health > 0 ) {
+        bSeeEnemyNow = Controller != none && Controller.Enemy != none && Controller.Enemy == Controller.Target
+                && Controller.CanSee(Controller.Enemy);
+
+        if ( bCanSeeEnamy != bSeeEnemyNow ) {
+            bCanSeeEnamy = bSeeEnemyNow;
+            if ( bCanSeeEnamy ) {
+                ChargeEnemyTime = Level.TimeSeconds + 1.0 + 3.0*frand();
             }
-            else
-            {
-                if (!bCanSeeTarget)
-                {
-                    bCanSeeTarget = true;
-                    SeeTargetTime = Level.TimeSeconds;
+        }
+        else if ( bCanSeeEnamy && Level.TimeSeconds > ChargeEnemyTime ) {
+            DistSq = VSizeSquared(Controller.Enemy.Location - Location);
+            if (DistSq < MaxTeleportDistSq) {
+                if ( (DistSq > MinTeleportDistSq || !Controller.ActorReachable(Controller.Enemy)) && CanTeleport() ) {
+                    StartTeleport();
                 }
-                else if (Level.TimeSeconds > SeeTargetTime + PeriodSeeTarget)
-                {
-                    if (VSize(Controller.Target.Location - Location) < MaxTeleportDist)
-                    {
-                        if (VSize(Controller.Target.Location - Location) > MinTeleportDist || !Controller.ActorReachable(Controller.Target))
-                        {
-                            if (CanTeleport())
-                                StartTelePort();
-                        }
-                        else
-                        {
-                            if (CanRun())
-                                GotoState('Running');
-                        }
-                    }
+                else if ( CanRun() ) {
+                    GotoState('Running');
                 }
             }
         }
@@ -241,7 +244,7 @@ simulated function Tick(float Delta)
         {
             AlphaFader = FMax(AlphaFader - Delta * 512, 0);
 
-            if (Level.NetMode != NM_Client && AlphaFader == 0)
+            if (Role == ROLE_Authority && AlphaFader == 0)
             {
                 SetCollision(true, true);
                 FlashTeleport();
@@ -253,7 +256,7 @@ simulated function Tick(float Delta)
         {
             AlphaFader = FMin(AlphaFader + Delta * 512, 255);
 
-            if (Level.NetMode != NM_Client && AlphaFader == 255)
+            if (Role == ROLE_Authority && AlphaFader == 255)
             {
                 FadeStage = 0;
                 SetCollision(true, true);
@@ -302,7 +305,7 @@ function bool CanTeleport()
 
 function bool CanRun()
 {
-    return (!bFlashTeleporting && !IsInState('Running') && RunCooldownEnd < Level.TimeSeconds);
+    return !bFlashTeleporting && RunCooldownEnd < Level.TimeSeconds;
 }
 
 function bool IsHeadShot(vector loc, vector ray, float AdditionalScale)
@@ -428,10 +431,10 @@ function FlashTeleport()
     local int iEndAngle;
     local int iAttempts;
 
-    if (Controller == none || Controller.Target == none)
+    if (Controller == none || Controller.Enemy == none)
         return;
 
-    Target = Controller.Target;
+    Target = Controller.Enemy;
     RotOld = rotator(Target.Location - Location);
     RotNew = RotOld;
     OldLoc = Location;
@@ -481,37 +484,26 @@ Teleported:
     LastFlashTime = Level.TimeSeconds;
 }
 
-function Died(Controller Killer, class<DamageType> damageType, vector HitLocation)
-{
-    // (!)
-    Super.Died(Killer, damageType, HitLocation);
-}
-
 function RemoveHead()
 {
     local class<KFWeaponDamageType> KFDamType;
+    local KFPlayerController KFPC;
 
     KFDamType = class<KFWeaponDamageType>(LastDamagedByType);
+    if ( LastDamagedBy != none )
+        KFPC = KFPlayerController(LastDamagedBy.Controller);
+
     if ( KFDamType != none && !KFDamType.default.bIsPowerWeapon
             && !KFDamType.default.bSniperWeapon && !KFDamType.default.bIsMeleeDamage
-            && !KFDamType.default.bIsExplosive && !KFDamType.default.bDealBurningDamage
-            && !ClassIsChildOf(KFDamType, class'DamTypeDualies')
-            && !ClassIsChildOf(KFDamType, class'DamTypeMK23Pistol')
-            && !ClassIsChildOf(KFDamType, class'DamTypeMagnum44Pistol') )
+            && !KFDamType.default.bIsExplosive && !KFDamType.default.bDealBurningDamage )
     {
         LastDamageAmount *= 3.5; //significantly raise decapitation bonus for Assault Rifles
 
         //award shiver kill on decap for Commandos
-        if ( KFPawn(LastDamagedBy)!=None && KFPlayerController(LastDamagedBy.Controller) != none
-                && KFSteamStatsAndAchievements(KFPlayerController(LastDamagedBy.Controller).SteamStatsAndAchievements) != none )
-        {
-            KFDamType.Static.AwardKill(
-                KFSteamStatsAndAchievements(KFPlayerController(LastDamagedBy.Controller).SteamStatsAndAchievements),
-                KFPlayerController(LastDamagedBy.Controller), self);
+        if ( KFPC != none && KFSteamStatsAndAchievements(KFPC.SteamStatsAndAchievements) != none ) {
+            KFDamType.Static.AwardKill(KFSteamStatsAndAchievements(KFPC.SteamStatsAndAchievements), KFPC, self);
         }
     }
-    if (IsInState('Running'))
-        GotoState('');
     Super.RemoveHead();
 }
 
@@ -561,14 +553,13 @@ defaultproperties
     MaxTilt=10000.000000
     MaxTurn=20000.000000
     bDelayedReaction=True
-    PeriodSeeTarget=2.000000
     PeriodRunBase=4.000000
     PeriodRunRan=4.000000
     PeriodRunCoolBase=4.000000
     PeriodRunCoolRan=3.000000
     AlphaFader=255.000000
-    MinTeleportDist=550.000000
-    MaxTeleportDist=2000.000000
+    MinTeleportDistSq=302500   // 11m squared
+    MaxTeleportDistSq=4000000  // 40m squared
     MinLandDist=150.000000
     MaxLandDist=500.000000
     MaxTeleportAttempts=3

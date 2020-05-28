@@ -21,7 +21,7 @@ del %STEAMDIR%\System\KillingFloor.log 2>nul
 del %STEAMDIR%\System\steam_appid.txt 2>nul
 
 xcopy /F /I /Y %KFPACKAGE%.u %STEAMDIR%\System\
-xcopy /F /I /Y %KFPACKAGE%.ucl %STEAMDIR%\System\
+REM xcopy /F /I /Y %KFPACKAGE%.ucl %STEAMDIR%\System\
 xcopy /F /I /Y %KFPACKAGE%.int %STEAMDIR%\System\
 
 echo --------------------------------

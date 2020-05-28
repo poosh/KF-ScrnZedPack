@@ -1,6 +1,11 @@
 # KF-ScrnZedPack
 ScrN modification of custom monsters, adjusting game balance and bug fixes.
 
+# Version History
+### v1.11
+- Fixed an issue when **Shiver** could teleport if he did not see the player.
+- Added slight randomness in Shiver's teleport cooldown preventing 4-pack squad to teleport at the same time
+
 ### v1.10
 - **HardPat** made weaker on lower difficulties:
   - Chaingun burst proportionally lowered according to difficulty. HoE remained the same.
