@@ -2,6 +2,16 @@
 ScrN modification of custom monsters, adjusting game balance and bug fixes.
 
 # Version History
+### v1.20
+#### Female Fleshpound
+- Fixed hitbox during the rage run
+- Adjusted head collision, so it can be shot from a side
+- Known issue: when she lowers her head while walking (not raged), her head still remains up on the server.
+#### Jason
+- Removed auto-rage on bodyshots while stunned. It didn't work reliably on the server anyway.
+- On HoE, Jason can be stunned only once.
+- Flinch counter gets reset on stun. Now you can flich-lock him up to 5 times, then stun, then do 5 flinches again.
+
 ### v1.11
 - Fixed an issue when **Shiver** could teleport if he did not see the player.
 - Added slight randomness in Shiver's teleport cooldown preventing 4-pack squad to teleport at the same time

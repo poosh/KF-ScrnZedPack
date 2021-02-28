@@ -8,13 +8,13 @@ var bool bFindNewEnemy, bSmashDoor, bStartled, bAttackedTarget, bMissTarget;
 var float prevRageTimer,prevRageThreshold;
 
 //I fear nothing but you WILL fear me!!
-//FFP will not bother trying to avoid nades when raged, prevents players from using their nades to stop her in a door. 
+//FFP will not bother trying to avoid nades when raged, prevents players from using their nades to stop her in a door.
 //(I know because as a medic I was doing it all the time. - Whisky)
 function FearThisSpot(AvoidMarker aSpot)
 {
     local FemaleFP FFP;
     FFP = FemaleFP(Pawn);
-    
+
     if (!FFP.bChargingPlayer)
     {
         if ( Skill > 1 + 2.0 * FRand() )
@@ -22,25 +22,25 @@ function FearThisSpot(AvoidMarker aSpot)
     }
 }
 
-function PostBeginPlay() 
+function PostBeginPlay()
 {
     super.PostBeginPlay();
-    prevRageThreshold= default.RageFrustrationThreshhold + (Frand() * 5); 
+    prevRageThreshold= default.RageFrustrationThreshhold + (Frand() * 5);
 }
 
-function bool FindNewEnemy() 
+function bool FindNewEnemy()
 {
     bFindNewEnemy= true;
     return super.FindNewEnemy();
 }
 
-function BreakUpDoor(KFDoorMover Other, bool bTryDistanceAttack) 
+function BreakUpDoor(KFDoorMover Other, bool bTryDistanceAttack)
 {
     bSmashDoor= true;
     super.BreakUpDoor(Other,bTryDistanceAttack);
 }
 
-function Startle(Actor Feared) 
+function Startle(Actor Feared)
 {
     bStartled= True;
     super.Startle(Feared);
@@ -73,13 +73,13 @@ WaitForAnim:
         SoakStop("STUCK IN SPINATTACK!!!");
 }
 
-state ZombieCharge 
+state ZombieCharge
 {
-    function BeginState() 
+    function BeginState()
     {
         super.BeginState();
 
-        if (!bSmashDoor && ((bAttackedTarget && bMissTarget) || bFindNewEnemy || bStartled)) 
+        if (!bSmashDoor && ((bAttackedTarget && bMissTarget) || bFindNewEnemy || bStartled))
         {
             RageFrustrationTimer= prevRageTimer;
             RageFrustrationThreshhold= prevRageThreshold;
@@ -91,16 +91,16 @@ state ZombieCharge
         bMissTarget= false;
     }
 
-    function EndState() 
+    function EndState()
     {
         prevRageTimer= RageFrustrationTimer;
         prevRageThreshold= RageFrustrationThreshhold;
     }
-    
+
     function Tick( float Delta )
     {
         local FemaleFP FFP;
-        
+
         Global.Tick(Delta);
 
         // Make the FP rage if we haven't reached our enemy after a certain amount of time
@@ -116,7 +116,7 @@ state ZombieCharge
                 }
             }
         }
-    }    
+    }
 }
 
 defaultproperties

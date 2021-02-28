@@ -5,12 +5,11 @@ class ZombieJason extends ZombieScrake;
 #exec load obj file=ScrnZedPack_A.ukx
 
 var int OriginalMeleeDamage; // default melee damage, adjusted by game's difficulty
-var transient bool bFlippedOver;
+var transient bool bFlippedOver, bWasFlippedOver;
 var transient float LastFlipOverTime;
 var float FlipOverDuration;
 var bool bWasRaged; // set to true, if Jason is raged or was raged before
 var float RageHealthPct;
-
 
 
 simulated function PostBeginPlay()
@@ -34,8 +33,13 @@ simulated function UpdateExhaustEmitter() {}
 
 function bool FlipOver()
 {
-    bFlippedOver= super.FlipOver();
+    if ( bWasFlippedOver && Level.Game.GameDifficulty >= 7.0 )
+        return false;  // on HoE, can be stunned only once
+
+    bFlippedOver = super.FlipOver();
     if ( bFlippedOver ) {
+        StunsRemaining = default.StunsRemaining;  // restore the default flich count on stun
+        bWasFlippedOver = true;
         LastFlipOverTime = Level.TimeSeconds;
         // do not rotate while stunned
         Controller.Focus = none;
@@ -77,24 +81,8 @@ function TakeDamage(int Damage, Pawn InstigatedBy, Vector HitLocation, Vector Mo
         DamageDone = OldHealth - Health;
 
         if ( !bDecapitated ) {
-            if( bFlippedOver ) {
-                if ( Level.Game.GameDifficulty >= 7.0 && Health>0 && !bIsHeadShot && DamageDone<800
-                        && Level.TimeSeconds - LastFlipOverTime > 0.1
-                        && (DamageDone > 300 || (Damage > 50 && KFDamType.default.bSniperWeapon)) )
-                {
-                    // [HoE only] Break stun if Jason is hit with sniper weapon to the body
-                    bFlippedOver = false;
-                    bWaitForAnim = false;
-                    bShotAnim = false;
-                    if ( Controller != none )
-                        Controller.GoToState('ZombieHunt');
-                    GoToState('RunningState');
-                }
-            }
-            else {
-                if ( Level.Game.GameDifficulty >= 5.0 && !IsInState('SawingLoop') && !IsInState('RunningState') && float(Health) / HealthMax < RageHealthPct )
+            if ( Level.Game.GameDifficulty >= 5.0 && !IsInState('SawingLoop') && !IsInState('RunningState') && float(Health) / HealthMax < RageHealthPct )
                     RangedAttack(InstigatedBy);
-            }
         }
     }
     else {

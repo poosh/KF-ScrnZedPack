@@ -27,19 +27,22 @@ var() vector OffsetMag;
 var() vector OffsetRate;
 var() float OffsetTime;
 var() int RageDamageThreshold;
+var() vector OnlineHeadshotOffsetCharging;   // Headshot offset for when a zed isn't animating online and charging
+
 
 replication
 {
     reliable if(Role==ROLE_Authority)
-        bChargingPlayer,bFrustrated, bNeedVent;
+        bChargingPlayer, bFrustrated, bNeedVent;
 }
+
 
 simulated function PostBeginPlay()
 {
     super.PostBeginPlay();
 
     if( ROLE==ROLE_Authority ) {
-        StunsRemaining = fmax(7 - Level.Game.GameDifficulty, 1);
+        StunsRemaining = fmax(8 - Level.Game.GameDifficulty, 1);
     }
 }
 
@@ -55,6 +58,15 @@ simulated function PostNetBeginPlay()
     super.PostNetBeginPlay();
 }
 
+simulated function PostNetReceive()
+{
+    super.PostNetReceive();
+
+    if( bClientCharge != bChargingPlayer ) {
+        bClientCharge = bChargingPlayer;
+        ClientChargingAnims();
+    }
+}
 
 // This zed has been taken control of. Boost its health and speed
 function SetMindControlled(bool bNewMindControlled)
@@ -146,7 +158,6 @@ function bool MeleeDamageTarget(int hitdamage, vector pushdir)
     return didIHit;
 }
 
-
 function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector Momentum, class<DamageType> damageType, optional int HitIndex)
 {
     local int OldHealth;
@@ -200,11 +211,6 @@ function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector M
         }
     }
 
-    // Shut off his "Device" when dead
-    if (Damage >= Health)
-        PostNetReceive();
-
-
     if (damageType == class 'DamTypeVomit')
         Damage = 0; // nulled
 
@@ -214,17 +220,23 @@ function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector M
     else
         super(KFMonster).TakeDamage(Damage, instigatedBy, hitLocation, momentum, damageType);
 
+        Damage = OldHealth - Health;
 
-    Damage = OldHealth - Health;
-
-    // Starts charging if single damage > 300 or health drops below 50% on hard difficulty or below,
-    // or health <75% on Suicidal/HoE
-    // -- PooSH
-    if ( Health > 0 && !bDecapitated && !bChargingPlayer
+    if ( Health <= 0 ) {
+        // Shut off her "Device" when dead
+        DeviceGoNormal();
+        StopVenting();
+    }
+    else if ( !bDecapitated && !bChargingPlayer
             && !bZapped && (!(bCrispified && bBurnified) || bFrustrated)
             && (Damage > RageDamageThreshold || Health < HealthMax*0.5
                 || (Level.Game.GameDifficulty >= 5.0 && Health < HealthMax*0.75)) )
+    {
+        // Starts charging if single damage > 300 or health drops below 50% on hard difficulty or below,
+        // or health <75% on Suicidal/HoE
+        // -- PooSH
         StartCharging();
+    }
 }
 
 function RangedAttack(Actor A)
@@ -389,57 +401,51 @@ state RageCharging
     {
         local float DifficultyModifier;
 
-        bRageFirstHit = false;
-
-        if( bZapped )
-        {
+        if( bZapped ) {
             GoToState('');
+            return;
         }
-        else
+
+        bRageFirstHit = false;
+        bChargingPlayer = true;
+        OnlineHeadshotOffset = OnlineHeadshotOffsetCharging;
+        ClientChargingAnims();
+
+        // Scale rage length by difficulty
+        if( Level.Game.GameDifficulty < 2.0 )
         {
-            bChargingPlayer = true;
-            if( Level.NetMode!=NM_DedicatedServer )
-                ClientChargingAnims();
-
-            // Scale rage length by difficulty
-            if( Level.Game.GameDifficulty < 2.0 )
-            {
-                DifficultyModifier = 0.85;
-            }
-            else if( Level.Game.GameDifficulty < 4.0 )
-            {
-                DifficultyModifier = 1.0;
-            }
-            else if( Level.Game.GameDifficulty < 5.0 )
-            {
-                DifficultyModifier = 1.25;
-            }
-            else // Hardest difficulty
-            {
-                DifficultyModifier = 3.0; // Doubled Fleshpound Rage time for Suicidal and HoE in Balance Round 1
-            }
-
-            RageEndTime = Level.TimeSeconds + DifficultyModifier * (10.0 + 6.0*FRand());
-            NetUpdateTime = Level.TimeSeconds - 1;
+            DifficultyModifier = 0.85;
         }
+        else if( Level.Game.GameDifficulty < 4.0 )
+        {
+            DifficultyModifier = 1.0;
+        }
+        else if( Level.Game.GameDifficulty < 5.0 )
+        {
+            DifficultyModifier = 1.25;
+        }
+        else // Hardest difficulty
+        {
+            DifficultyModifier = 3.0; // Doubled Fleshpound Rage time for Suicidal and HoE in Balance Round 1
+        }
+
+        RageEndTime = Level.TimeSeconds + DifficultyModifier * (10.0 + 6.0*FRand());
+        NetUpdateTime = Level.TimeSeconds - 1;
     }
 
     function EndState()
     {
-        bChargingPlayer = False;
+        bChargingPlayer = false;
         bFrustrated = false;
+        OnlineHeadshotOffset = default.OnlineHeadshotOffset;
 
         FleshPoundZombieController(Controller).RageFrustrationTimer = 0;
         StopVenting();
 
-        if( Health>0 && !bZapped )
-        {
+        if( Health > 0 && !bZapped ) {
             SetGroundSpeed(GetOriginalGroundSpeed());
         }
-
-        if( Level.NetMode!=NM_DedicatedServer )
-            ClientChargingAnims();
-
+        ClientChargingAnims();
         NetUpdateTime = Level.TimeSeconds - 1;
     }
 
@@ -566,34 +572,32 @@ Ignores StartCharging;
     }
 }
 
-simulated function PostNetReceive()
+simulated function ClientChargingAnims()
 {
-    super.PostNetReceive();
+    if ( bZapped || Level.NetMode == NM_DedicatedServer )
+        return;
 
-    if( bClientCharge!=bChargingPlayer && !bZapped )
-    {
-        bClientCharge=bChargingPlayer;
-        if( bChargingPlayer ) {
-            MovementAnims[0]=ChargingAnim;
-            MeleeAnims[0]='attack3';
-            MeleeAnims[1]='attack3';
-            MeleeAnims[2]='attack3';
-            DeviceGoRed();
-        }
-        else {
-            MovementAnims[0]=default.MovementAnims[0];
-            MeleeAnims[0]=default.MeleeAnims[0];
-            MeleeAnims[1]=default.MeleeAnims[1];
-            MeleeAnims[2]=default.MeleeAnims[2];
-            DeviceGoNormal();
-            StopVenting();
-        }
+    if( bChargingPlayer ) {
+        MovementAnims[0]=ChargingAnim;
+        MeleeAnims[0]='attack3';
+        MeleeAnims[1]='attack3';
+        MeleeAnims[2]='attack3';
+        DeviceGoRed();
+    }
+    else {
+        MovementAnims[0]=default.MovementAnims[0];
+        MeleeAnims[0]=default.MeleeAnims[0];
+        MeleeAnims[1]=default.MeleeAnims[1];
+        MeleeAnims[2]=default.MeleeAnims[2];
+        DeviceGoNormal();
+        StopVenting();
     }
 }
 
-simulated function ClientChargingAnims()
+simulated function UnSetZappedBehavior()
 {
-    PostNetReceive();
+    super.UnSetZappedBehavior();
+    ClientChargingAnims();
 }
 
 function ClawDamageTarget()
@@ -734,12 +738,7 @@ simulated event SetAnimAction(name NewAction)
 // The animation is full body and should set the bWaitForAnim flag
 simulated function bool AnimNeedsWait(name TestAnim)
 {
-    if( TestAnim == 'Rage_Start' || TestAnim == 'DoorBash' )
-    {
-        return true;
-    }
-
-    return false;
+    return TestAnim == 'Rage_Start' || TestAnim == 'DoorBash';
 }
 
 simulated function Tick(float DeltaTime)
@@ -792,7 +791,7 @@ function bool FlipOver()
 
 function bool SameSpeciesAs(Pawn P)
 {
-    return ZombieFleshPound(P) != none || FemaleFP(P) != none;
+    return P.IsA('ZombieFleshPound') || P.IsA('FemaleFP');
 }
 
 simulated function Destroyed()
@@ -923,17 +922,18 @@ defaultproperties
      bMeleeStunImmune=True
      Intelligence=BRAINS_Mammal
      bUseExtendedCollision=True
-     ColOffset=(Z=47.000000)
-     ColRadius=40
-     ColHeight=40
+     ColOffset=(X=25.0,Z=43.0)
+     ColRadius=30
+     ColHeight=30
      ExtCollAttachBoneName="Collision_Attach"
      SeveredLegAttachScale=1.100000
      SeveredHeadAttachScale=1.200000
      DetachedArmClass=Class'ScrnZedPack.SeveredArmFFP'
      DetachedLegClass=Class'ScrnZedPack.SeveredLegFFP'
      PlayerCountHealthScale=0.300000
-     OnlineHeadshotOffset=(X=25.000000,Z=61.000000)
-     OnlineHeadshotScale=1.3 // 1.3
+     OnlineHeadshotOffset=(X=25.0,Z=59.0)
+     OnlineHeadshotOffsetCharging=(X=35.0,Z=50.0)
+     OnlineHeadshotScale=1.3
      HeadHealth=600.000000
      PlayerNumHeadHealthScale=0.300000
      MotionDetectorThreat=5.000000
@@ -956,7 +956,7 @@ defaultproperties
      MenuName="Female FleshPound"
      ControllerClass=Class'ScrnZedPack.FFPController'
      MovementAnims(0)="WalkF"
-     MovementAnims(1)="WalkF"
+     MovementAnims(1)="WalkB"
      MovementAnims(2)="WalkL"
      MovementAnims(3)="WalkR"
      WalkAnims(2)="WalkL"
