@@ -2,6 +2,15 @@
 ScrN modification of custom monsters, adjusting game balance and bug fixes.
 
 # Version History
+### v1.21
+- Improved headshot detection for all zeds in the pack, including the Grittier ones
+#### Female Fleshpound
+- Fixed headbox of the attacking FFP. Now you need to shoot her in the head instead of boobs.
+- Fixed an issue when FFP could do double damage on the heavy attack
+- Increased base damage of the heavy attack to compensate the fixed double damage.
+  Previously the heavy attack made 150% damage + (extra 100% due to bug). Now it always 175% damage.
+- FFP slows down when preparing for an attack, but still continues to move.
+
 ### v1.20
 #### Female Fleshpound
 - Fixed hitbox during the rage run

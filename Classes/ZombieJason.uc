@@ -53,6 +53,67 @@ function bool CanGetOutOfWay()
     return !bFlippedOver; // can't dodge husk fireballs while stunned
 }
 
+function bool IsHeadShot(vector HitLoc, vector ray, float AdditionalScale)
+{
+    local coords C;
+    local vector HeadLoc;
+    local int look;
+    local bool bUseAltHeadShotLocation;
+    local bool bWasAnimating;
+
+    if (HeadBone == '')
+        return false;
+
+    if (Level.NetMode == NM_DedicatedServer) {
+        // If we are a dedicated server estimate what animation is most likely playing on the client
+        if (Physics == PHYS_Falling) {
+            log("Falling");
+            PlayAnim(AirAnims[0], 1.0, 0.0);
+        }
+        else if (Physics == PHYS_Walking) {
+            bWasAnimating = IsAnimating(0) || IsAnimating(1);
+            if( !bWasAnimating ) {
+                if (bIsCrouched) {
+                    PlayAnim(IdleCrouchAnim, 1.0, 0.0);
+                }
+                else {
+                    bUseAltHeadShotLocation=true;
+                }
+            }
+
+            if ( bDoTorsoTwist ) {
+                SmoothViewYaw = Rotation.Yaw;
+                SmoothViewPitch = ViewPitch;
+
+                look = (256 * ViewPitch) & 65535;
+                if (look > 32768)
+                    look -= 65536;
+
+                SetTwistLook(0, look);
+            }
+        }
+        else if (Physics == PHYS_Swimming) {
+            PlayAnim(SwimAnims[0], 1.0, 0.0);
+        }
+
+        if( !bWasAnimating && !bUseAltHeadShotLocation ) {
+            SetAnimFrame(0.5);
+        }
+    }
+
+    if( bUseAltHeadShotLocation ) {
+        HeadLoc = Location + (OnlineHeadshotOffset >> Rotation);
+        AdditionalScale *= OnlineHeadshotScale;
+    }
+    else {
+        C = GetBoneCoords(HeadBone);
+        HeadLoc = C.Origin + (HeadHeight * HeadScale * AdditionalScale * C.XAxis);
+    }
+
+    return class'ScrnZedFunc'.static.TestHitboxSphere(HitLoc, Ray, HeadLoc,
+            HeadRadius * HeadScale * AdditionalScale);
+}
+
 function TakeDamage(int Damage, Pawn InstigatedBy, Vector HitLocation, Vector Momentum, class<DamageType> DamType, optional int HitIndex)
 {
     local bool bIsHeadShot;

@@ -12,10 +12,15 @@ class FemaleFP extends KFMonster;
 #exec load obj file=ScrnZedPack_A.ukx
 
 var transient bool bChargingPlayer,bClientCharge,bFrustrated,bNeedVent;
-var transient bool bRageFirstHit; //did she hit a player during current rage run
+var transient bool bRageMegaHit;  // superior damage on the first attack after rage
+var float RageMegaHitCounter;  // rate time until resetting
+var float RageMegaHitDamageMult;
 var float RageEndTime;
 var FleshPoundAvoidArea AvoidArea;
 var name ChargingAnim;
+var float ChargingSpeedMult;
+var transient name LastAttackAnim;
+var transient float LastAttack3Time;
 
 var() class<VehicleExhaustEffect>    VentEffectClass; // Effect class for the vent emitter
 var() VehicleExhaustEffect         VentEffect,VentEffect2; //Dual venting baby!
@@ -158,6 +163,66 @@ function bool MeleeDamageTarget(int hitdamage, vector pushdir)
     return didIHit;
 }
 
+function bool IsHeadShot(vector HitLoc, vector ray, float AdditionalScale)
+{
+    local coords C;
+    local vector HeadLoc;
+    local int look;
+    local bool bUseAltHeadShotLocation;
+    local bool bWasAnimating;
+
+    if (HeadBone == '')
+        return false;
+
+    if (Level.NetMode == NM_DedicatedServer) {
+        // If we are a dedicated server estimate what animation is most likely playing on the client
+        if (Physics == PHYS_Falling) {
+            PlayAnim(AirAnims[0], 1.0, 0.0);
+        }
+        else if (Physics == PHYS_Walking) {
+            bWasAnimating = IsAnimating(0) || IsAnimating(1);
+            if( !bWasAnimating ) {
+                if (bIsCrouched) {
+                    PlayAnim(IdleCrouchAnim, 1.0, 0.0);
+                }
+                else {
+                    bUseAltHeadShotLocation=true;
+                }
+            }
+
+            if ( bDoTorsoTwist ) {
+                SmoothViewYaw = Rotation.Yaw;
+                SmoothViewPitch = ViewPitch;
+
+                look = (256 * ViewPitch) & 65535;
+                if (look > 32768)
+                    look -= 65536;
+
+                SetTwistLook(0, look);
+            }
+        }
+        else if (Physics == PHYS_Swimming) {
+            PlayAnim(SwimAnims[0], 1.0, 0.0);
+        }
+
+        if( !bWasAnimating && !bUseAltHeadShotLocation ) {
+            SetAnimFrame(0.5);
+        }
+    }
+
+    if( bUseAltHeadShotLocation ) {
+        HeadLoc = Location + (OnlineHeadshotOffset >> Rotation);
+        AdditionalScale *= OnlineHeadshotScale;
+    }
+    else {
+        C = GetBoneCoords(HeadBone);
+        HeadLoc = C.Origin + (HeadHeight * HeadScale * AdditionalScale * C.XAxis);
+    }
+
+    return class'ScrnZedFunc'.static.TestHitboxSphere(HitLoc, Ray, HeadLoc,
+            HeadRadius * HeadScale * AdditionalScale);
+}
+
 function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector Momentum, class<DamageType> damageType, optional int HitIndex)
 {
     local int OldHealth;
@@ -175,7 +240,7 @@ function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector M
         // Do larger headshot checks if it is a melee attach
         if( class<DamTypeMelee>(damageType) != none )
             HeadShotCheckScale *= 1.25;
-        bIsHeadShot = IsHeadShot(Hitlocation, normal(Momentum), 1.0);
+        bIsHeadShot = IsHeadShot(Hitlocation, normal(Momentum), HeadShotCheckScale);
 
         // She takes less damage to small arms fire (non explosives)
         // Frags and LAW rockets will bring her down way faster than bullets and shells.
@@ -271,7 +336,6 @@ simulated function SpawnVentEmitter()
 }
 
 
-//Clean up of effects.
 function Died(Controller Killer, class<DamageType> damageType, vector HitLocation)
 {
     StopVenting();
@@ -280,8 +344,6 @@ function Died(Controller Killer, class<DamageType> damageType, vector HitLocatio
 
 simulated function VentMe()
 {
-    //Level.GetLocalPlayerController().ClientMessage("VentMe");
-    //Log("AAAAAARRRRRRROOOOOOOOOOOOOOGGGGGAAAAAAAAA!!");
     bNeedVent = true;
     SpawnVentEmitter();
 }
@@ -344,11 +406,11 @@ state BeginRaging
         return false;
     }
 
-    function Tick( float Delta )
+    function Tick(float dt)
     {
         Acceleration = vect(0,0,0);
 
-        global.Tick(Delta);
+        global.Tick(dt);
     }
 
 Begin:
@@ -406,30 +468,21 @@ state RageCharging
             return;
         }
 
-        bRageFirstHit = false;
+        bRageMegaHit = true;
         bChargingPlayer = true;
         OnlineHeadshotOffset = OnlineHeadshotOffsetCharging;
         ClientChargingAnims();
 
         // Scale rage length by difficulty
-        if( Level.Game.GameDifficulty < 2.0 )
-        {
-            DifficultyModifier = 0.85;
-        }
-        else if( Level.Game.GameDifficulty < 4.0 )
-        {
+        if( Level.Game.GameDifficulty < 4.0 )
             DifficultyModifier = 1.0;
-        }
         else if( Level.Game.GameDifficulty < 5.0 )
-        {
             DifficultyModifier = 1.25;
-        }
         else // Hardest difficulty
-        {
             DifficultyModifier = 3.0; // Doubled Fleshpound Rage time for Suicidal and HoE in Balance Round 1
-        }
 
-        RageEndTime = Level.TimeSeconds + DifficultyModifier * (10.0 + 6.0*FRand());
+        // Female FP charges ~1.5x longer than a male. Cuz she is a pissed-off cunt
+        RageEndTime = Level.TimeSeconds + DifficultyModifier * (7.5 + 9.0*FRand());
         NetUpdateTime = Level.TimeSeconds - 1;
     }
 
@@ -449,27 +502,42 @@ state RageCharging
         NetUpdateTime = Level.TimeSeconds - 1;
     }
 
-    function Tick( float Delta )
+    function Tick( float dt )
     {
-        if( !bShotAnim )
-        {
-            SetGroundSpeed(OriginalGroundSpeed * 2.3);//2.0;
-            if( !bFrustrated && !bZedUnderControl && Level.TimeSeconds>RageEndTime )
-            {
+        if ( bShotAnim ) {
+            // probably redundant because the server is playing the attack animation and, therefore,
+            // does not take OnlineHeadshotOffset into account
+            OnlineHeadshotOffset = default.OnlineHeadshotOffset;
+        }
+        else {
+            if( !bFrustrated && !bZedUnderControl && Level.TimeSeconds>RageEndTime ) {
                 GoToState('');
             }
-        }
-
-        // Keep the flesh pound moving toward its target when attacking
-        if( Role == ROLE_Authority && bShotAnim)
-        {
-            if( LookTarget!=None )
-            {
-                Acceleration = AccelRate * Normal(LookTarget.Location - Location);
+            else {
+                OnlineHeadshotOffset = OnlineHeadshotOffsetCharging;
+                SetGroundSpeed(OriginalGroundSpeed * ChargingSpeedMult);
+                if (!bRageMegaHit) {
+                    RageMegaHitCounter -= dt;
+                    if ( RageMegaHitCounter <= 0 )
+                        bRageMegaHit = true;
+                }
             }
         }
 
-        global.Tick(Delta);
+        global.Tick(dt);
+    }
+
+    simulated event SetAnimAction(name NewAction) {
+        global.SetAnimAction(NewAction);
+
+        if ( bShotAnim ) {
+            if ( bRageMegaHit && AnimAction == 'Attack3' ) {
+                SetGroundSpeed(0);
+            }
+            else {
+                SetGroundSpeed(OriginalGroundSpeed);
+            }
+        }
     }
 
     function Bump( Actor Other )
@@ -514,15 +582,16 @@ state RageCharging
             oldEnemyHealth= KFP.Health;
 
         bWasEnemy = (Controller.Target==Controller.Enemy);
-        if ( !bRageFirstHit )
-            hitdamage *= 1.5; // first rage hit doesn more damage, down from 1.75 to 1.5 in v091 -- PooSH
+        if ( bRageMegaHit )
+            hitdamage *= RageMegaHitDamageMult;
         RetVal = Super(KFMonster).MeleeDamageTarget(hitdamage, pushdir*3);
 
-        if ( bAttackingHuman || bWasEnemy )
-            bRageFirstHit = true; //she had a chance to do a greater damage. If she missed - her fault
+        if ( bAttackingHuman || bWasEnemy ) {
+            bRageMegaHit = false; //she had a chance to do a greater damage. If she missed - her fault
+            RageMegaHitCounter = default.RageMegaHitCounter;
+        }
 
-        if(RetVal && bWasEnemy)
-        {
+        if(RetVal && bWasEnemy) {
             // On Hard and below she always calms down, no matter of was hit successful or not
             // On Suicidal she calms down after successfull hit
             // On HoE she calms down only if killed a player.
@@ -540,57 +609,39 @@ state RageCharging
                 GoToState('');
         }
 
+        if ( !bCalmDown ) {
+            SetGroundSpeed(OriginalGroundSpeed * ChargingSpeedMult);
+        }
+
         return RetVal;
     }
 }
 
+// XXX: do we need this state?
 state ChargeToMarker extends RageCharging
 {
-Ignores StartCharging;
-
-    function Tick( float Delta )
-    {
-        if( !bShotAnim )
-        {
-            SetGroundSpeed(OriginalGroundSpeed * 2.3);
-            if( !bFrustrated && !bZedUnderControl && Level.TimeSeconds>RageEndTime )
-            {
-                GoToState('');
-            }
-        }
-
-        // Keep the flesh pound moving toward its target when attacking
-        if( Role == ROLE_Authority && bShotAnim)
-        {
-            if( LookTarget!=None )
-            {
-                Acceleration = AccelRate * Normal(LookTarget.Location - Location);
-            }
-        }
-
-        global.Tick(Delta);
-    }
 }
 
 simulated function ClientChargingAnims()
 {
-    if ( bZapped || Level.NetMode == NM_DedicatedServer )
+    if ( bZapped )
         return;
 
     if( bChargingPlayer ) {
         MovementAnims[0]=ChargingAnim;
-        MeleeAnims[0]='attack3';
-        MeleeAnims[1]='attack3';
-        MeleeAnims[2]='attack3';
-        DeviceGoRed();
     }
     else {
         MovementAnims[0]=default.MovementAnims[0];
-        MeleeAnims[0]=default.MeleeAnims[0];
-        MeleeAnims[1]=default.MeleeAnims[1];
-        MeleeAnims[2]=default.MeleeAnims[2];
-        DeviceGoNormal();
-        StopVenting();
+    }
+
+    if ( Level.NetMode != NM_DedicatedServer ) {
+        if( bChargingPlayer ) {
+            DeviceGoRed();
+        }
+        else {
+            DeviceGoNormal();
+            StopVenting();
+        }
     }
 }
 
@@ -606,10 +657,6 @@ function ClawDamageTarget()
     local KFHumanPawn HumanTarget;
     local KFPlayerController HumanTargetController;
     local float UsedMeleeDamage;
-    local name  Sequence;
-    local float Frame, Rate;
-
-    GetAnimParams( ExpectingChannel, Sequence, Frame, Rate );
 
     if( MeleeDamage > 1 )
     {
@@ -620,14 +667,21 @@ function ClawDamageTarget()
        UsedMeleeDamage = MeleeDamage;
     }
 
-    // Reduce the melee damage for anims with repeated attacks, since it does repeated damage over time
-    if( Sequence == 'Attack1' )
-    {
-        UsedMeleeDamage *= 0.5;
+    if( LastAttackAnim == 'Attack1' ) {
+        UsedMeleeDamage *= 0.60;
     }
-    else if( Sequence == 'Attack2' )
-    {
-        UsedMeleeDamage *= 0.25;
+    else if( LastAttackAnim == 'Attack2' ) {
+        // Reduce the melee damage for anims with repeated attacks, since it does repeated damage over time
+        UsedMeleeDamage *= 0.30;
+    }
+    else if ( LastAttackAnim == 'Attack3' ) {
+        if (Level.TimeSeconds - LastAttack3Time < 1.0) {
+            // there is a bug in animation notifies that calls ClawDamageTarget() twice per Attack3 animation
+            // (copy from Attack2). Attack3 should damage only once
+            // TODO: remove the redundant notify from the animation package
+            return;
+        }
+        LastAttack3Time = Level.TimeSeconds;
     }
 
     if(Controller!=none && Controller.Target!=none)
@@ -696,9 +750,9 @@ simulated function int DoAnimAction( name AnimName )
     {
         AnimBlendParams(1, 1.0, 0.0,, FireRootBone);
         PlayAnim(AnimName,, 0.1, 1);
-        Return 1;
+        return 1;
     }
-    Return Super.DoAnimAction(AnimName);
+    return Super.DoAnimAction(AnimName);
 }
 
 simulated event SetAnimAction(name NewAction)
@@ -709,9 +763,15 @@ simulated event SetAnimAction(name NewAction)
         Return;
     if(NewAction == 'Claw')
     {
-        meleeAnimIndex = Rand(3);
+        if ( bChargingPlayer && bRageMegaHit ) {
+            meleeAnimIndex = 2; // Attack3
+        }
+        else {
+            meleeAnimIndex = Rand(3);
+        }
         NewAction = meleeAnims[meleeAnimIndex];
         CurrentDamtype = ZombieDamType[meleeAnimIndex];
+        LastAttackAnim = NewAction;
     }
     else if( NewAction == 'DoorBash' )
     {
@@ -738,18 +798,17 @@ simulated event SetAnimAction(name NewAction)
 // The animation is full body and should set the bWaitForAnim flag
 simulated function bool AnimNeedsWait(name TestAnim)
 {
-    return TestAnim == 'Rage_Start' || TestAnim == 'DoorBash';
+    return TestAnim == 'Rage_Start' || TestAnim == 'DoorBash'
+                ||  TestAnim=='Attack1' || TestAnim=='Attack2' || TestAnim=='Attack3';
 }
 
-simulated function Tick(float DeltaTime)
+simulated function Tick(float dt)
 {
-    super.Tick(DeltaTime);
+    super.Tick(dt);
 
-    // Keep the flesh pound moving toward its target when attacking
-    if( Role == ROLE_Authority && bShotAnim)
-    {
-        if( LookTarget!=None )
-        {
+    // Keep the flesh pound moving toward her target when attacking
+    if( Role == ROLE_Authority && bShotAnim) {
+        if( LookTarget!=None ) {
             Acceleration = AccelRate * Normal(LookTarget.Location - Location);
         }
     }
@@ -757,7 +816,6 @@ simulated function Tick(float DeltaTime)
     if ( Level.NetMode != NM_DedicatedServer ) {
         if ( bNeedVent && Health > 0 )
             SpawnVentEmitter();
-
         //DebugHead();
     }
 }
@@ -873,7 +931,58 @@ simulated function PlayDyingAnimation(class<DamageType>DamageType,vector HitLoc)
 
 function RemoveHead()
 {
-    Super.RemoveHead();
+    local int i;
+
+    Intelligence = BRAINS_Retarded; // Headless dumbasses!
+
+    bDecapitated  = true;
+    DECAP = true;
+    DecapTime = Level.TimeSeconds;
+
+    Velocity = vect(0,0,0);
+    SetAnimAction(KFHitFront);
+    SetGroundSpeed(GroundSpeed *= 0.80);
+    AirSpeed *= 0.8;
+    WaterSpeed *= 0.8;
+
+    // No more raspy breathin'...cuz he has no throat or mouth :S
+    AmbientSound = MiscSound;
+
+    //TODO - do we need to inform the controller that we can't move owing to lack of head,
+    //       or is that handled elsewhere
+    if ( Controller != none )
+    {
+        MonsterController(Controller).Accuracy = -5;  // More chance of missing. (he's headless now, after all) :-D
+    }
+
+    // Head explodes, causing additional hurty.
+    if( KFPawn(LastDamagedBy)!=None )
+    {
+        TakeDamage( LastDamageAmount + 0.25 * HealthMax , LastDamagedBy, LastHitLocation, LastMomentum, LastDamagedByType);
+
+        if ( BurnDown > 0 )
+        {
+            KFSteamStatsAndAchievements(KFPawn(LastDamagedBy).PlayerReplicationInfo.SteamStatsAndAchievements).AddBurningDecapKill(class'KFGameType'.static.GetCurrentMapName(Level));
+        }
+    }
+
+    if( Health > 0 )
+    {
+        BleedOutTime = Level.TimeSeconds +  BleedOutDuration;
+    }
+
+    // Plug in headless anims if we have them
+    for( i = 0; i < 4; i++ )
+    {
+        if( HeadlessWalkAnims[i] != '' && HasAnim(HeadlessWalkAnims[i]) )
+        {
+            MovementAnims[i] = HeadlessWalkAnims[i];
+            WalkAnims[i]     = HeadlessWalkAnims[i];
+        }
+    }
+
+    PlaySound(DecapitationSound, SLOT_Misc,1.30,true,525);
+
     // FFP has different bone names. Since most bones are hardcoded in KFMonster,
     // there is no easy way to implement decapitation
     KilledBy(LastDamagedBy);
@@ -893,6 +1002,9 @@ static simulated function PreCacheMaterials(LevelInfo myLevel)
 defaultproperties
 {
      ChargingAnim="Rage_Run"
+     ChargingSpeedMult=2.3
+     RageMegaHitDamageMult=1.75
+     RageMegaHitCounter=10.0
      VentEffectClass=Class'ScrnZedPack.FFPVentEmitter'
      RageDamageThreshold=300
      MeleeAnims(0)="Attack1"
@@ -959,6 +1071,10 @@ defaultproperties
      MovementAnims(1)="WalkB"
      MovementAnims(2)="WalkL"
      MovementAnims(3)="WalkR"
+     HeadlessWalkAnims(0)="Headless_WalkCycle"
+     HeadlessWalkAnims(1)="Headless_WalkCycle_Back"
+     HeadlessWalkAnims(2)="Headless_WalkCycle_Left"
+     HeadlessWalkAnims(3)="Headless_WalkCycle_Right"
      WalkAnims(2)="WalkL"
      WalkAnims(3)="WalkR"
      IdleCrouchAnim="Idle"

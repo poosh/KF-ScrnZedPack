@@ -6,9 +6,9 @@ class ZombieGhost extends ZombieStalker;
 
 #exec OBJ LOAD FILE=ScrnZedPack_T.utx
 
-// max distance squared for player to see cloacked Stalkers. 
+// max distance squared for player to see cloacked Stalkers.
 // Beyond that distance Stalkers will appear completely invisible.
-var float CloakDistanceSqr; 
+var float CloakDistanceSqr;
 // Unclock distance squared for Commandos
 var float UncloakDistanceSqr;
 
@@ -40,7 +40,7 @@ static simulated function PreCacheMaterials(LevelInfo myLevel)
 simulated function PostNetBeginPlay()
 {
     super.PostNetBeginPlay();
-    
+
     if ( LocalKFHumanPawn != none ) {
         CloakDistanceSqr = fmax(CloakDistanceSqr, 3.0 * UncloakDistanceSqr * LocalKFHumanPawn.GetStalkerViewDistanceMulti());
         UncloakDistanceSqr *= LocalKFHumanPawn.GetStalkerViewDistanceMulti();
@@ -137,6 +137,67 @@ simulated function UnCloakStalker()
     }
 }
 
+function bool IsHeadShot(vector HitLoc, vector ray, float AdditionalScale)
+{
+    local coords C;
+    local vector HeadLoc;
+    local int look;
+    local bool bUseAltHeadShotLocation;
+    local bool bWasAnimating;
+
+    if (HeadBone == '')
+        return false;
+
+    if (Level.NetMode == NM_DedicatedServer) {
+        // If we are a dedicated server estimate what animation is most likely playing on the client
+        if (Physics == PHYS_Falling) {
+            log("Falling");
+            PlayAnim(AirAnims[0], 1.0, 0.0);
+        }
+        else if (Physics == PHYS_Walking) {
+            bWasAnimating = IsAnimating(0) || IsAnimating(1);
+            if( !bWasAnimating ) {
+                if (bIsCrouched) {
+                    PlayAnim(IdleCrouchAnim, 1.0, 0.0);
+                }
+                else {
+                    bUseAltHeadShotLocation=true;
+                }
+            }
+
+            if ( bDoTorsoTwist ) {
+                SmoothViewYaw = Rotation.Yaw;
+                SmoothViewPitch = ViewPitch;
+
+                look = (256 * ViewPitch) & 65535;
+                if (look > 32768)
+                    look -= 65536;
+
+                SetTwistLook(0, look);
+            }
+        }
+        else if (Physics == PHYS_Swimming) {
+            PlayAnim(SwimAnims[0], 1.0, 0.0);
+        }
+
+        if( !bWasAnimating && !bUseAltHeadShotLocation ) {
+            SetAnimFrame(0.5);
+        }
+    }
+
+    if( bUseAltHeadShotLocation ) {
+        HeadLoc = Location + (OnlineHeadshotOffset >> Rotation);
+        AdditionalScale *= OnlineHeadshotScale;
+    }
+    else {
+        C = GetBoneCoords(HeadBone);
+        HeadLoc = C.Origin + (HeadHeight * HeadScale * AdditionalScale * C.XAxis);
+    }
+
+    return class'ScrnZedFunc'.static.TestHitboxSphere(HitLoc, Ray, HeadLoc,
+            HeadRadius * HeadScale * AdditionalScale);
+}
+
 function RemoveHead()
 {
     Super(KFMonster).RemoveHead();
@@ -168,16 +229,16 @@ simulated function PlayDying(class<DamageType> DamageType, vector HitLoc)
 simulated function Tick(float DeltaTime)
 {
     local float DistanceSqr;
-    
+
     Super(KFMonster).Tick(DeltaTime);
-    
+
     // Keep the stalker moving toward its target when attacking
     if( Role == ROLE_Authority && bShotAnim && !bWaitForAnim && !bZapped ) {
         if( LookTarget!=None ) {
             Acceleration = AccelRate * Normal(LookTarget.Location - Location);
         }
-    } 
-    
+    }
+
     if( Level.NetMode==NM_DedicatedServer )
         Return; // Servers aren't intrested in this info.
 
@@ -193,13 +254,13 @@ simulated function Tick(float DeltaTime)
         if ( LocalKFHumanPawn != none ) {
             DistanceSqr = VSizeSquared(Location - LocalKFHumanPawn.Location);
             if( LocalKFHumanPawn.Health > 0 && LocalKFHumanPawn.ShowStalkers()
-                    && DistanceSqr < UncloakDistanceSqr ) 
+                    && DistanceSqr < UncloakDistanceSqr )
             {
                 bSpotted = True;
                 if ( Skins[0] != GlowFX ) {
                     Skins[0] = GlowFX;
                     Skins[1] = GlowFX;
-                    bUnlit = true;                
+                    bUnlit = true;
                 }
             }
             else if ( DistanceSqr < CloakDistanceSqr ) {
@@ -217,7 +278,7 @@ simulated function Tick(float DeltaTime)
 }
 
 
-function RangedAttack(Actor A) 
+function RangedAttack(Actor A)
 {
     if ( !bShotAnim && Physics != PHYS_Swimming && CanAttack(A) ) {
         bShotAnim = true;
@@ -226,7 +287,7 @@ function RangedAttack(Actor A)
 }
 
 // copied from ZombieSuperStalker (c) Scary Ghost
-simulated event SetAnimAction(name NewAction) 
+simulated event SetAnimAction(name NewAction)
 {
     if( NewAction=='' )
         Return;
@@ -243,7 +304,7 @@ simulated event SetAnimAction(name NewAction)
 }
 
 // copied from ZombieSuperStalker (c) Scary Ghost
-simulated function int AttackAndMoveDoAnimAction( name AnimName ) 
+simulated function int AttackAndMoveDoAnimAction( name AnimName )
 {
     local int meleeAnimIndex;
     local float duration;

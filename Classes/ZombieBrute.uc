@@ -153,11 +153,17 @@ function RangedAttack(Actor A)
     }
 }
 
-function bool IsHeadShot(vector Loc, vector Ray, float AdditionalScale)
+function bool IsHeadShot(vector HitLoc, vector Ray, float AdditionalScale)
 {
+    local coords C;
+    local vector HeadLoc;
+    local int look;
+    local bool bUseAltHeadShotLocation;
+    local bool bWasAnimating;
     local float D;
     local float AddScale;
     local bool bIsBlocking;
+    local bool bHeadShot;
 
     bBlockedHS = false;
 
@@ -169,23 +175,68 @@ function bool IsHeadShot(vector Loc, vector Ray, float AdditionalScale)
     else
         AddScale = AdditionalScale + 1.0;
 
-    if (Super.IsHeadShot(Loc, Ray, AddScale))
-    {
-        if (bIsBlocking)
-        {
-            D = vector(Rotation) dot Ray;
-            if (-D > 0.20) {
-                bBlockedHS = true;
-                return false;
-            }
-            else
-                return true;
-        }
-        else
-            return true;
-    }
-    else
+
+    if (HeadBone == '')
         return false;
+
+    if (Level.NetMode == NM_DedicatedServer) {
+        // If we are a dedicated server estimate what animation is most likely playing on the client
+        if (Physics == PHYS_Falling) {
+            log("Falling");
+            PlayAnim(AirAnims[0], 1.0, 0.0);
+        }
+        else if (Physics == PHYS_Walking) {
+            bWasAnimating = IsAnimating(0) || IsAnimating(1);
+            if( !bWasAnimating ) {
+                if (bIsCrouched) {
+                    PlayAnim(IdleCrouchAnim, 1.0, 0.0);
+                }
+                else {
+                    bUseAltHeadShotLocation=true;
+                }
+            }
+
+            if ( bDoTorsoTwist ) {
+                SmoothViewYaw = Rotation.Yaw;
+                SmoothViewPitch = ViewPitch;
+
+                look = (256 * ViewPitch) & 65535;
+                if (look > 32768)
+                    look -= 65536;
+
+                SetTwistLook(0, look);
+            }
+        }
+        else if (Physics == PHYS_Swimming) {
+            PlayAnim(SwimAnims[0], 1.0, 0.0);
+        }
+
+        if( !bWasAnimating && !bUseAltHeadShotLocation ) {
+            SetAnimFrame(0.5);
+        }
+    }
+
+    if( bUseAltHeadShotLocation ) {
+        HeadLoc = Location + (OnlineHeadshotOffset >> Rotation);
+        AdditionalScale *= OnlineHeadshotScale;
+    }
+    else {
+        C = GetBoneCoords(HeadBone);
+        HeadLoc = C.Origin + (HeadHeight * HeadScale * AdditionalScale * C.XAxis);
+    }
+
+    bHeadShot = class'ScrnZedFunc'.static.TestHitboxSphere(HitLoc, Ray, HeadLoc,
+            HeadRadius * HeadScale * AdditionalScale);
+
+    if ( bHeadShot && bIsBlocking ) {
+        D = vector(Rotation) dot Ray;
+        if (-D > 0.20) {
+            bBlockedHS = true;
+            bHeadShot = false;
+        }
+    }
+
+    return bHeadShot;
 }
 
 // Damage, which doen't make headshots, always does full damage to Brute
