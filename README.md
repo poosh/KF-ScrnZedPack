@@ -2,6 +2,18 @@
 ScrN modification of custom monsters, adjusting game balance and bug fixes.
 
 # Version History
+### v1.22
+#### Female Fleshpound
+- Fixed an issue where FFP completely stopped while preparing for the heavy attack
+- It is still possible to dodge the heavy attack by jumping backward while holding a knife or having a perk with
+  speed bonus
+- Increased heavy attack damage
+- FFP deals 25% more damage when enraged
+- FFP makes the heavy attack only when enraged
+- Fixed an issue when burning FFP couldn't start raging. Now setting FFP on fire can delay raging but not avoid it.
+- Auto-rage timer lowered from 30-35s to 20-30s. Same as before, breaking the line of sight does not reset the timer
+  but pauses it. Only damaging a player or breaking a door resets the auto-rage time.
+
 ### v1.21
 - Improved headshot detection for all zeds in the pack, including the Grittier ones
 #### Female Fleshpound

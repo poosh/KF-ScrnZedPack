@@ -4,8 +4,10 @@
 //-----------------------------------------------------------
 class FFPController extends FleshpoundZombieController;
 
-var bool bFindNewEnemy, bSmashDoor, bStartled, bAttackedTarget, bMissTarget;
-var float prevRageTimer,prevRageThreshold;
+var float RageFrustrationThreshholdRand;
+
+var transient bool bSmashDoor, bHitTarget;
+
 
 //I fear nothing but you WILL fear me!!
 //FFP will not bother trying to avoid nades when raged, prevents players from using their nades to stop her in a door.
@@ -13,8 +15,8 @@ var float prevRageTimer,prevRageThreshold;
 function FearThisSpot(AvoidMarker aSpot)
 {
     local FemaleFP FFP;
-    FFP = FemaleFP(Pawn);
 
+    FFP = FemaleFP(Pawn);
     if (!FFP.bChargingPlayer)
     {
         if ( Skill > 1 + 2.0 * FRand() )
@@ -22,28 +24,10 @@ function FearThisSpot(AvoidMarker aSpot)
     }
 }
 
-function PostBeginPlay()
-{
-    super.PostBeginPlay();
-    prevRageThreshold= default.RageFrustrationThreshhold + (Frand() * 5);
-}
-
-function bool FindNewEnemy()
-{
-    bFindNewEnemy= true;
-    return super.FindNewEnemy();
-}
-
 function BreakUpDoor(KFDoorMover Other, bool bTryDistanceAttack)
 {
-    bSmashDoor= true;
+    bSmashDoor = true;
     super.BreakUpDoor(Other,bTryDistanceAttack);
-}
-
-function Startle(Actor Feared)
-{
-    bStartled= True;
-    super.Startle(Feared);
 }
 
 state SpinAttack
@@ -77,43 +61,41 @@ state ZombieCharge
 {
     function BeginState()
     {
-        super.BeginState();
+        super(KFMonsterController).BeginState();
 
-        if (!bSmashDoor && ((bAttackedTarget && bMissTarget) || bFindNewEnemy || bStartled))
-        {
-            RageFrustrationTimer= prevRageTimer;
-            RageFrustrationThreshhold= prevRageThreshold;
+        // reset rage timer only if FFP smashed a door or hits her target
+        if ( bSmashDoor || bHitTarget ) {
+            RageFrustrationThreshhold = default.RageFrustrationThreshhold
+                    + RageFrustrationThreshholdRand * frand();
+            RageFrustrationTimer = 0;
         }
-        bFindNewEnemy= false;
-        bSmashDoor= false;
-        bStartled= false;
-        bAttackedTarget= false;
-        bMissTarget= false;
+
+        bSmashDoor = false;
+        bHitTarget = false;
     }
 
-    function EndState()
+    function Frustrate()
     {
-        prevRageTimer= RageFrustrationTimer;
-        prevRageThreshold= RageFrustrationThreshhold;
+        local FemaleFP FFP;
+
+        FFP = FemaleFP(Pawn);
+
+        if( FFP != none && !FFP.bChargingPlayer ) {
+            FFP.bFrustrated = true;
+            FFP.StartCharging();
+        }
     }
 
     function Tick( float Delta )
     {
-        local FemaleFP FFP;
-
         Global.Tick(Delta);
 
-        // Make the FP rage if we haven't reached our enemy after a certain amount of time
-        if( RageFrustrationTimer < RageFrustrationThreshhold ) {
+        // Make the FFP rage if she hasn't reached the enemy
+        // after a certain amount of time
+        if ( RageFrustrationTimer < RageFrustrationThreshhold ) {
             RageFrustrationTimer += Delta;
-
-            if( RageFrustrationTimer >= RageFrustrationThreshhold ) {
-                FFP = FemaleFP(Pawn);
-
-                if( FFP != none && !FFP.bChargingPlayer ) {
-                    FFP.StartCharging();
-                    FFP.bFrustrated = true;
-                }
+            if ( RageFrustrationTimer >= RageFrustrationThreshhold ) {
+                Frustrate();
             }
         }
     }
@@ -121,5 +103,6 @@ state ZombieCharge
 
 defaultproperties
 {
-     RageFrustrationThreshhold=30.000000
+     RageFrustrationThreshhold=20.0
+     RageFrustrationThreshholdRand=10.0
 }
