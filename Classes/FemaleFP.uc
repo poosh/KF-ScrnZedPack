@@ -565,7 +565,7 @@ state RageCharging
         KFP = KFPawn(Controller.Target);
         bAttackingHuman = KFP != none;
         if (bAttackingHuman)
-            oldEnemyHealth= KFP.Health;
+            oldEnemyHealth = KFP.Health;
 
         bWasEnemy = (Controller.Target==Controller.Enemy);
         if ( bRageMegaHit )
@@ -580,25 +580,21 @@ state RageCharging
             RageMegaHitCounter = default.RageMegaHitCounter;
         }
 
-        if(RetVal && bWasEnemy) {
-            // On Hard and below she always calms down, no matter of was hit successful or not
-            // On Suicidal she calms down after successfull hit
-            // On HoE she calms down only if killed a player.
-            if ( bAttackingHuman && Level.Game.GameDifficulty >= 5.0 ) {
-                if ( Level.Game.GameDifficulty >= 7.0 )
-                    bCalmDown = KFP == none || KFP.Health <= 0;
-                else
-                    bCalmDown = KFP == none || KFP.Health < oldEnemyHealth;
-            }
-            else {
-                bCalmDown = true;
-            }
-
-            if (bCalmDown)
-                GoToState('');
+        // On Hard and below she always calms down, no matter of was hit successful or not
+        // On Suicidal she calms down after successfull hit
+        // On HoE she calms down only if killed a player.
+        if ( Level.Game.GameDifficulty < 5 || !bAttackingHuman ) {
+            bCalmDown = true;
+        }
+        else {
+            bCalmDown = RetVal && bWasEnemy && (KFP == none || KFP.Health <= 0
+                    || (Level.Game.GameDifficulty < 7.0 && KFP.Health < oldEnemyHealth));
         }
 
-        if ( !bCalmDown ) {
+        if (bCalmDown) {
+            GoToState('');
+        }
+        else {
             SetGroundSpeed(OriginalGroundSpeed * ChargingSpeedMult);
         }
 

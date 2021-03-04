@@ -2,6 +2,10 @@
 ScrN modification of custom monsters, adjusting game balance and bug fixes.
 
 # Version History
+### v1.23
+- Fixed FFP rage stop on Hard and below. On easier difficulties she always calms down after the hit no matter if she
+  hits something or not.
+
 ### v1.22
 #### Female Fleshpound
 - Fixed an issue where FFP completely stopped while preparing for the heavy attack
