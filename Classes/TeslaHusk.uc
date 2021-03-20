@@ -1,4 +1,4 @@
-class TeslaHusk extends ZombieHusk;
+class TeslaHusk extends ZedBaseHusk;
 
 #exec OBJ LOAD FILE=KF_EnemiesFinalSnd_CIRCUS.uax
 #exec OBJ LOAD FILE=ScrnZedPack_A.ukx
@@ -37,6 +37,8 @@ var transient float LastDischargeTime;
 var() float     HealRate;          // Percent of HealthMax to heal per second
 var() float     HealEnergyDrain; // amount of energy required to heal 1%
 var transient float NextHealAttemptTime, LastHealTime;
+
+var vector HeadOffset;
 
 
 struct SActorDamages
@@ -422,63 +424,7 @@ function float RangedAttackTime()
 
 function bool IsHeadShot(vector HitLoc, vector ray, float AdditionalScale)
 {
-    local coords C;
-    local vector HeadLoc;
-    local int look;
-    local bool bUseAltHeadShotLocation;
-    local bool bWasAnimating;
-
-    if (HeadBone == '')
-        return false;
-
-    if (Level.NetMode == NM_DedicatedServer) {
-        // If we are a dedicated server estimate what animation is most likely playing on the client
-        if (Physics == PHYS_Falling) {
-            log("Falling");
-            PlayAnim(AirAnims[0], 1.0, 0.0);
-        }
-        else if (Physics == PHYS_Walking) {
-            bWasAnimating = IsAnimating(0) || IsAnimating(1);
-            if( !bWasAnimating ) {
-                if (bIsCrouched) {
-                    PlayAnim(IdleCrouchAnim, 1.0, 0.0);
-                }
-                else {
-                    bUseAltHeadShotLocation=true;
-                }
-            }
-
-            if ( bDoTorsoTwist ) {
-                SmoothViewYaw = Rotation.Yaw;
-                SmoothViewPitch = ViewPitch;
-
-                look = (256 * ViewPitch) & 65535;
-                if (look > 32768)
-                    look -= 65536;
-
-                SetTwistLook(0, look);
-            }
-        }
-        else if (Physics == PHYS_Swimming) {
-            PlayAnim(SwimAnims[0], 1.0, 0.0);
-        }
-
-        if( !bWasAnimating && !bUseAltHeadShotLocation ) {
-            SetAnimFrame(0.5);
-        }
-    }
-
-    if( bUseAltHeadShotLocation ) {
-        HeadLoc = Location + (OnlineHeadshotOffset >> Rotation);
-        AdditionalScale *= OnlineHeadshotScale;
-    }
-    else {
-        C = GetBoneCoords(HeadBone);
-        HeadLoc = C.Origin + (HeadHeight * HeadScale * AdditionalScale * C.XAxis) -5.0*C.XAxis - 2.0*C.YAxis;
-    }
-
-    return class'ScrnZedFunc'.static.TestHitboxSphere(HitLoc, Ray, HeadLoc,
-            HeadRadius * HeadScale * AdditionalScale);
+    return class'ScrnZedFunc'.static.IsHeadShot(self, HitLoc, ray, AdditionalScale, HeadOffset);
 }
 
 state Healing
@@ -813,14 +759,6 @@ defaultproperties
 
     Mesh=SkeletalMesh'ScrnZedPack_A.TeslaHuskMesh'
 
-    BurningWalkFAnims(0)="WalkF"
-    BurningWalkFAnims(1)="WalkF"
-    BurningWalkFAnims(2)="WalkF"
-    BurningWalkAnims(0)="WalkB"
-    BurningWalkAnims(1)="WalkL"
-    BurningWalkAnims(2)="WalkR"
-
-
     Skins(0)=Shader'ScrnZedPack_T.TeslaHusk.TeslaHusk_SHADER'
 
     DetachedArmClass=Class'ScrnZedPack.SeveredArmTeslaHusk'
@@ -836,6 +774,7 @@ defaultproperties
     WaterSpeed=120 // 102
     GroundSpeed=140 // 115
 
+    HeadOffset=(X=-5.0,Y=-2.0)
     OnlineHeadshotOffset=(X=22.000000,Z=50.000000)
     OnlineHeadshotScale=1.0
     ColOffset=(Z=36.000000)

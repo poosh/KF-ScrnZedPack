@@ -7,11 +7,7 @@ var NavigationPoint MidGoals[2];
 var byte ReachOffset;
 var Actor OldPathsCheck[3];
 
-function Debugf( string S )
-{
-    Level.GetLocalPlayerController().ClientMessage(S);
-    Log(S);
-}
+
 final function FindPathAround()
 {
     local Actor Res;

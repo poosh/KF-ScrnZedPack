@@ -2,6 +2,29 @@
 ScrN modification of custom monsters, adjusting game balance and bug fixes.
 
 # Version History
+### v2.00
+- Added and reworked all vanilla zeds to ScrnZedPack
+- Renamed most zed classes inside ScrnZedPack (check *ScrnWaves.ini*)
+- Enhanced head detection
+- Fixed projection of laser sights on big zed heads
+###### Bloat
+- Doubled head health (25 -> 50 base)
+- Head health increases by 20% per extra player. 6p HoE Bloat now has 175hp
+  Not too much, but cannot be decapitated with just two off-perk 9mm shots
+- Bloat cannot puke while decapitated
+- Decapitating a Bloat immediately stops him from vomiting
+###### Siren
+- Removed the scream canceling exploit
+- Siren cannot scream when decapitated
+- Decapitating Siren during screaming eliminates any further damage.
+- Fixed vortex pull effect (it has been bugged in vanilla since the very beginning didn't work in the most cases).
+- Reduced scream damage by 25% to compensate for fixed vortex pull.
+- Siren scream shatters frozen zeds nearby, turning their bodies into deadly ice shards
+###### Scrake
+- Saw loop damage now scales per difficulty. In vanilla it did not change, that why SC did so little damage on HoE.
+- Base saw loop damage reduced by 20% to compensate fixed difficulty scaling. HoE saw damage is higher by ~40% now.
+
+
 ### v1.23
 - Fixed FFP rage stop on Hard and below. On easier difficulties she always calms down after the hit no matter if she
   hits something or not.
