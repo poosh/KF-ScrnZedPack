@@ -243,6 +243,9 @@ function RangedAttack(Actor A)
 
 function n_SpawnBeam()
 {
+    if ( Controller == none || Controller.Target == none )
+        return;
+        
     SpawnPrimaryBeam();
     if ( PrimaryBeam == none ) {
         log("Unable to spawn Primary Beam!", 'TeslaHusk');

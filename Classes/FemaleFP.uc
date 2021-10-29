@@ -17,7 +17,8 @@ var float RageMegaHitCounter;  // rate time until resetting
 var float RageMegaHitDamageMult;
 var float Attack1DamageMult, Attack2DamageMult, RageDamageMult;
 var float RageEndTime;
-var FleshPoundAvoidArea AvoidArea;
+var class<ZedAvoidArea> AvoidAreaClass;
+var ZedAvoidArea AvoidArea;
 var name ChargingAnim;
 var float ChargingSpeedMult;
 var transient name LastAttackAnim;
@@ -49,27 +50,27 @@ simulated function PostBeginPlay()
 
     if( ROLE==ROLE_Authority ) {
         StunsRemaining = fmax(8 - Level.Game.GameDifficulty, 1);
+
+        AvoidArea=Spawn(AvoidAreaClass, self);
+        if ( AvoidArea != none )
+            AvoidArea.InitFor(Self);
     }
     class'ScrnZedFunc'.static.ZedBeginPlay(self);
 }
 
 simulated function Destroyed()
 {
-    if( AvoidArea!=None )
+    class'ScrnZedFunc'.static.ZedDestroyed(self);
+
+    if( AvoidArea != none )
         AvoidArea.Destroy();
     StopVenting();
 
-    class'ScrnZedFunc'.static.ZedDestroyed(self);
     Super.Destroyed();
 }
 
 simulated function PostNetBeginPlay()
 {
-    if(AvoidArea==None)
-        AvoidArea=Spawn(class'FleshPoundAvoidArea',self);
-    if(AvoidArea!=None)
-        AvoidArea.InitFor(Self);
-
     EnableChannelNotify(1,1);
     AnimBlendParams(1,1.0,0.0,,SpineBone2);
     super.PostNetBeginPlay();
@@ -273,6 +274,10 @@ function RangedAttack(Actor A)
 function Died(Controller Killer, class<DamageType> damageType, vector HitLocation)
 {
     StopVenting();
+    if( AvoidArea != none ) {
+        AvoidArea.Destroy();
+        AvoidArea = none;
+    }
     super.Died( Killer, damageType, HitLocation );
 }
 
@@ -1046,4 +1051,5 @@ defaultproperties
      CollisionRadius=26
      Mass=500.000000
      RotationRate=(Yaw=45000,Roll=0)
+     AvoidAreaClass=class'ZedAvoidArea'
 }

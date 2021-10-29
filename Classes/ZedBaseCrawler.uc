@@ -26,7 +26,52 @@ function TakeDamage(int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector mo
         Super.TakeDamage(Damage, instigatedBy, hitLocation, momentum, DamType);
 }
 
+event Bump(actor Other)
+{
+    local KFHumanPawn P;
+    local vector v1, v2;
+    local float d;
+
+    if ( !bPouncing )
+        return;
+
+    P = KFHumanPawn(Other);
+    if ( P != none && (Normal(Velocity) dot Normal(P.Location - Location)) > 0.7) {
+        P.TakeDamage(MeleeDamage * (0.95 + 0.10*frand()), self, self.Location, self.velocity, ZombieDamType[0]);
+        if ( P.Health <=0 ) {
+            P.SpawnGibs(self.rotation, 1);
+        }
+        //After impact, there'll be no momentum for further bumps
+        bPouncing=false;
+    }
+}
+
 
 defaultproperties
 {
+    // Crawler does not have "Jump" animation
+    TakeoffAnims(0)="ZombieSpring"
+    TakeoffAnims(1)="ZombieSpring"
+    TakeoffAnims(2)="ZombieSpring"
+    TakeoffAnims(3)="ZombieSpring"
+    AirAnims(0)="ZombieLeapIdle"
+    AirAnims(1)="ZombieLeapIdle"
+    AirAnims(2)="ZombieLeapIdle"
+    AirAnims(3)="ZombieLeapIdle"
+    LandAnims(0)="Landed"
+    LandAnims(1)="Landed"
+    LandAnims(2)="Landed"
+    LandAnims(3)="Landed"
+    AirStillAnim="Jump2"
+    TakeoffStillAnim="ZombieSpring"
+
+    // these should not use but just in case
+    DoubleJumpAnims(0)="ZombieSpring"
+    DoubleJumpAnims(1)="ZombieSpring"
+    DoubleJumpAnims(2)="ZombieSpring"
+    DoubleJumpAnims(3)="ZombieSpring"
+    DodgeAnims(0)="ZombieSpring"
+    DodgeAnims(1)="ZombieSpring"
+    DodgeAnims(2)="ZombieSpring"
+    DodgeAnims(3)="ZombieSpring"
 }

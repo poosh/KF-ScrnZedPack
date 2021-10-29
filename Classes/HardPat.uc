@@ -6,6 +6,8 @@ var transient bool bFirstMissile;
 var bool bMovingChaingunAttack;
 var(Sounds) sound SaveMeSound;
 
+var float EscapeShieldDamageMult;  // damage reduction while escaping
+
 replication
 {
     reliable if( ROLE==ROLE_AUTHORITY )
@@ -229,6 +231,7 @@ Begin:
        GotoState('');
     }
 }
+
 state FireChaingun
 {
     function BeginState()
@@ -238,6 +241,7 @@ state FireChaingun
         bChargingPlayer = Level.Game.GameDifficulty >= 5 && bEndGameBoss && SyringeCount >= 3 && FRand() < 0.4f;
         bCanStrafe = true;
     }
+
     function EndState()
     {
         bChargingPlayer = false;
@@ -245,6 +249,7 @@ state FireChaingun
         bMovingChaingunAttack = false;
         bCanStrafe = false;
     }
+
     function Tick( float Delta )
     {
         Super(KFMonster).Tick(Delta);
@@ -253,15 +258,21 @@ state FireChaingun
         else
             GroundSpeed = OriginalGroundSpeed * 1.15;
     }
+
+    function FinishFire()
+    {
+        bShotAnim = true;
+        Acceleration = vect(0,0,0);
+        SetAnimAction('FireEndMG');
+        HandleWaitForAnim('FireEndMG');
+        GoToState('');
+    }
+
     function AnimEnd( int Channel )
     {
         if( MGFireCounter <= 0 )
         {
-            bShotAnim = true;
-            Acceleration = vect(0,0,0);
-            SetAnimAction('FireEndMG');
-            HandleWaitForAnim('FireEndMG');
-            GoToState('');
+            FinishFire();
         }
         else if( bMovingChaingunAttack )
         {
@@ -326,36 +337,29 @@ state FireChaingun
     {
         local float EnemyDistSq, DamagerDistSq;
         global.TakeDamage(Damage,instigatedBy,hitlocation,Momentum,damageType);
-        if( bMovingChaingunAttack || Health<=0 )
+        if( bMovingChaingunAttack || Health<=0 || InstigatedBy == none || !InstigatedBy.IsHumanControlled() )
             return;
 
         // if someone close up is shooting us, just charge them
-        if( InstigatedBy != none )
-        {
-            DamagerDistSq = VSizeSquared(Location - InstigatedBy.Location);
+        DamagerDistSq = VSizeSquared(Location - InstigatedBy.Location);
 
-            if( (ChargeDamage > 200 && DamagerDistSq < (500 * 500)) || DamagerDistSq < (100 * 100) )
-            {
-                SetAnimAction('transition');
-                GoToState('Charging');
-                return;
-            }
+        if( (ChargeDamage > 200 && DamagerDistSq < 250000) || DamagerDistSq < 10000 ) {
+            SetAnimAction('transition');
+            GoToState('Charging');
+            return;
         }
 
-        if( Controller.Enemy != none && InstigatedBy != none && InstigatedBy != Controller.Enemy )
-        {
+        if( Controller.Enemy != none && InstigatedBy != Controller.Enemy ) {
             EnemyDistSq = VSizeSquared(Location - Controller.Enemy.Location);
             DamagerDistSq = VSizeSquared(Location - InstigatedBy.Location);
         }
 
-        if( InstigatedBy != none && (DamagerDistSq < EnemyDistSq || Controller.Enemy == none) )
-        {
+        if( DamagerDistSq < EnemyDistSq || Controller.Enemy == none ) {
             MonsterController(Controller).ChangeEnemy(InstigatedBy,Controller.CanSee(InstigatedBy));
             Controller.Target = InstigatedBy;
             Controller.Focus = InstigatedBy;
 
-            if( DamagerDistSq < (500 * 500) )
-            {
+            if( DamagerDistSq < 250000 ) {
                 SetAnimAction('transition');
                 GoToState('Charging');
             }
@@ -368,23 +372,9 @@ Begin:
         if( !bMovingChaingunAttack )
             Acceleration = vect(0,0,0);
 
-        if( MGLostSightTimeout > 0 && Level.TimeSeconds > MGLostSightTimeout )
+        if( MGFireCounter <= 0  || (MGLostSightTimeout > 0 && Level.TimeSeconds > MGLostSightTimeout) )
         {
-            Acceleration = vect(0,0,0);
-            bShotAnim = true;
-            Acceleration = vect(0,0,0);
-            SetAnimAction('FireEndMG');
-            HandleWaitForAnim('FireEndMG');
-            GoToState('');
-        }
-
-        if( MGFireCounter <= 0 )
-        {
-            bShotAnim = true;
-            Acceleration = vect(0,0,0);
-            SetAnimAction('FireEndMG');
-            HandleWaitForAnim('FireEndMG');
-            GoToState('');
+            FinishFire();
         }
 
         // Give some randomness to the patriarch's firing (constantly fire after first stage passed)
@@ -405,6 +395,32 @@ Begin:
                 FireMGShot();
             Sleep(0.05);
         }
+    }
+}
+
+// Fire chaingun to clear path to escape
+state EscapeChaingun extends FireChaingun
+{
+    function BeginState()
+    {
+        Super.BeginState();
+        bMovingChaingunAttack = false;
+        bChargingPlayer = false;
+    }
+
+    function FinishFire()
+    {
+        GotoState('Escaping');
+    }
+
+    function bool ShouldKnockDownFromDamage()
+    {
+        return false;
+    }
+
+    function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector Momentum, class<DamageType> damageType, optional int HitIndex)
+    {
+        global.TakeDamage(Damage,instigatedBy,hitlocation,Momentum,damageType);
     }
 }
 
@@ -494,27 +510,15 @@ SecondMissile:
     AnimEnd(0);
 }
 
-State Escaping // Added god-mode if bEndGameBoss
+State Escaping
 {
-Ignores RangedAttack;
-
     function BeginState()
     {
-        GiveUpTime = Level.TimeSeconds+20.f+FRand()*20.f;
-        Super.BeginState();
-        if ( bEndGameBoss ) {
-            bBlockActors = false;
-            // While escaping Pat doesn't blow up pipebombs -- PooSH
-            MotionDetectorThreat=0;
-        }
+        GiveUpTime = 10.0 + 2.0 * Level.Game.GameDifficulty;
+        GiveUpTime *= 1.0 * frand();
+        GiveUpTime += Level.TimeSeconds;
     }
-    function EndState()
-    {
-        Super.EndState();
-        if( Health>0 )
-            bBlockActors = true;
-        MotionDetectorThreat = default.MotionDetectorThreat;
-    }
+
     function Tick( float Delta )
     {
         if( Level.TimeSeconds>GiveUpTime )
@@ -525,17 +529,45 @@ Ignores RangedAttack;
         if( !bChargingPlayer )
         {
             bChargingPlayer = true;
-                if( Level.NetMode!=NM_DedicatedServer )
-                    PostNetReceive();
-            }
+            if( Level.NetMode!=NM_DedicatedServer )
+                PostNetReceive();
+        }
         GroundSpeed = OriginalGroundSpeed * 2.5;
         Global.Tick(Delta);
     }
 
     function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector Momentum, class<DamageType> damageType, optional int HitIndex)
     {
-        if ( !bEndGameBoss )
-            global.TakeDamage(Damage,instigatedBy,hitlocation,Momentum,damageType);
+        if ( bEndGameBoss && bCloaked ) {
+            Damage *= EscapeShieldDamageMult;
+            if ( Damage <= 0 )
+                return;
+        }
+        global.TakeDamage(Damage,instigatedBy,hitlocation,Momentum,damageType);
+    }
+
+    function RangedAttack(Actor A)
+    {
+        if ( bShotAnim || !IsCloseEnuf(A) )
+            return;
+
+        if( bCloaked )
+            UnCloakBoss();
+
+        bShotAnim = true;
+
+        if ( Level.Game.GameDifficulty < 5 || frand() > 0.25 * (SyringeCount + 1) ) {
+            Acceleration = (A.Location-Location);
+            SetAnimAction('MeleeClaw');
+        }
+        else {
+            LastChainGunTime = Level.TimeSeconds + 5 + FRand() * 10;
+            Acceleration = vect(0,0,0);
+            SetAnimAction('PreFireMG');
+            HandleWaitForAnim('PreFireMG');
+            MGFireCounter = max(20, rand(30) + 3 * Level.Game.GameDifficulty * (SyringeCount+1));
+            GoToState('EscapeChaingun');
+        }
     }
 }
 
@@ -591,6 +623,7 @@ defaultproperties
     LODBias=4.000000
     MenuName="Hard Pat"
     ScoringValue=1000
+    EscapeShieldDamageMult=0.2  // 80% resistance
 
     // copy-pasted from ZombieBoss_STANDARD
     RocketFireSound=SoundGroup'KF_EnemiesFinalSnd.Patriarch.Kev_FireRocket'
