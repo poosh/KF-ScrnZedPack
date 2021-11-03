@@ -3,6 +3,7 @@ abstract;
 
 simulated function PostBeginPlay()
 {
+    CurrentDamType = ZombieDamType[0];
     super.PostBeginPlay();
     class'ScrnZedFunc'.static.ZedBeginPlay(self);
 }
@@ -29,8 +30,6 @@ function TakeDamage(int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector mo
 event Bump(actor Other)
 {
     local KFHumanPawn P;
-    local vector v1, v2;
-    local float d;
 
     if ( !bPouncing )
         return;

@@ -6,7 +6,7 @@ class HuskG extends ZedBaseHusk;
 var int ShotsRemaining;
 
 static simulated function PreCacheMaterials(LevelInfo myLevel)
-{//should be derived and used.
+{
     myLevel.AddPrecacheMaterial(Texture'ScrnZedPack_T.husk_grittier.husk_grittier_diff');
     myLevel.AddPrecacheMaterial(Texture'ScrnZedPack_T.husk_grittier.husk_grittier_emissive_mask');
     myLevel.AddPrecacheMaterial(Combiner'ScrnZedPack_T.husk_grittier.husk_grittier_energy_cmb');
@@ -18,48 +18,16 @@ static simulated function PreCacheMaterials(LevelInfo myLevel)
 
 simulated function PostBeginPlay()
 {
+    if ( Level.Game != none ) {
+        if ( Level.Game.GameDifficulty < 5 ) {
+            ShotsRemaining = 2; // max two shots in a row on Hard an below
+        }
+        else if ( Level.Game.GameDifficulty < 7 ) {
+            ShotsRemaining--;  // one less shot on Suicidal
+        }
+        // on HoE, use default.ShotsRemaining
+    }
     super.PostBeginPlay();
-    ShotsRemaining = Rand(default.ShotsRemaining) + 1;
-}
-
-function RangedAttack(Actor A) {
-    local int LastFireTime;
-
-    if ( bShotAnim )
-        return;
-
-    if ( Physics == PHYS_Swimming ) {
-        SetAnimAction('Claw');
-        bShotAnim = true;
-        LastFireTime = Level.TimeSeconds;
-    }
-    else if ( VSize(A.Location - Location) < MeleeRange + CollisionRadius + A.CollisionRadius ) {
-        bShotAnim = true;
-        LastFireTime = Level.TimeSeconds;
-        SetAnimAction('Claw');
-        //PlaySound(sound'Claw2s', SLOT_Interact); KFTODO: Replace this
-        Controller.bPreparingMove = true;
-        Acceleration = vect(0,0,0);
-    }
-    else if ( (KFDoorMover(A) != none ||
-            (!Region.Zone.bDistanceFog && VSize(A.Location-Location) <= 65535) ||
-            (Region.Zone.bDistanceFog && VSizeSquared(A.Location-Location) < (Square(Region.Zone.DistanceFogEnd) * 0.8)))  // Make him come out of the fog a bit
-            && !bDecapitated )
-    {
-        bShotAnim = true;
-
-        SetAnimAction('ShootBurns');
-        Controller.bPreparingMove = true;
-        Acceleration = vect(0,0,0);
-
-        if(--ShotsRemaining > 0) {
-            NextFireProjectileTime= Level.TimeSeconds;
-        }
-        else {
-            NextFireProjectileTime = Level.TimeSeconds + ProjectileFireInterval + (FRand() * 2.0);
-            ShotsRemaining = Rand(default.ShotsRemaining) + 1;
-        }
-    }
 }
 
 function SpawnTwoShots() {
@@ -133,5 +101,6 @@ defaultproperties
 
     MenuName="Grittier Husk"
     ShotsRemaining=4
+    MaxMeleeAttacks=1
     ControllerClass=Class'ScrnZedPack.HuskZombieControllerSE'
 }
