@@ -48,6 +48,7 @@ event Bump(actor Other)
 
 defaultproperties
 {
+    Mass=20
     // Crawler does not have "Jump" animation
     TakeoffAnims(0)="ZombieSpring"
     TakeoffAnims(1)="ZombieSpring"

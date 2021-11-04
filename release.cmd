@@ -60,6 +60,7 @@ if not exist %RELEASEDIR%\System\%KFPACKAGE%.u (
 echo.
 echo Updating the bundle...
 xcopy /F /I /Y %RELEASEDIR%\System\*                %BUNDLEDIR%\System\
+xcopy /F /I /Y %RELEASEDIR%\*.ini                   %BUNDLEDIR%\System\
 
 echo.
 echo Compressing uz2...

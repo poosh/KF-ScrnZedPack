@@ -74,4 +74,5 @@ defaultproperties
 {
     HeadHealth=50
     PlayerNumHeadHealthScale=0.2
+    Mass=500
 }

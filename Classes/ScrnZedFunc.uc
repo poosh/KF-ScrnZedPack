@@ -1,5 +1,10 @@
 class ScrnZedFunc extends Object
-abstract;
+    config(ScrnZedPack)
+    abstract;
+
+var config bool bHeadshotSrvAnim;
+var config bool bHeadshotSrvDebugAnim;
+var config bool bHeadshotSrvTorsoTwist;
 
 
 /**
@@ -59,7 +64,7 @@ static function bool IsHeadShot(KFMonster M, vector HitLoc, vector ray, float Ad
         // If we are a dedicated server estimate what animation is most likely playing on the client
         switch ( M.Physics ) {
             case PHYS_Walking:
-                bWasAnimating = M.IsAnimating(0) || M.IsAnimating(1);
+                bWasAnimating = default.bHeadshotSrvAnim && (M.IsAnimating(0) || M.IsAnimating(1));
                 if( !bWasAnimating ) {
                     if ( M.bIsCrouched ) {
                         M.PlayAnim(M.IdleCrouchAnim, 1.0, 0.0);
@@ -68,8 +73,11 @@ static function bool IsHeadShot(KFMonster M, vector HitLoc, vector ray, float Ad
                         bUseAltHeadShotLocation=true;
                     }
                 }
+                else if ( default.bHeadshotSrvDebugAnim ) {
+                    DebugAnim(M);
+                }
 
-                if ( M.bDoTorsoTwist && !bUseAltHeadShotLocation ) {
+                if ( default.bHeadshotSrvTorsoTwist && M.bDoTorsoTwist && !bUseAltHeadShotLocation ) {
                     M.SmoothViewYaw = M.Rotation.Yaw;
                     M.SmoothViewPitch = M.ViewPitch;
 
@@ -101,11 +109,34 @@ static function bool IsHeadShot(KFMonster M, vector HitLoc, vector ray, float Ad
     }
     else {
         C = M.GetBoneCoords(M.HeadBone);
-        HeadLoc = C.Origin + (M.HeadHeight * M.HeadScale * AdditionalScale * C.XAxis)
+        // AdditionalScale should not be here - it makes head by 25% higher when hitting with melee weapons.
+        HeadLoc = C.Origin + (M.HeadHeight * M.HeadScale * C.XAxis)
             + HeadOffset.X * C.XAxis + HeadOffset.Y * C.YAxis + HeadOffset.Z * C.ZAxis;
     }
 
     return TestHitboxSphere(HitLoc, Ray, HeadLoc, M.HeadRadius * M.HeadScale * AdditionalScale);
+}
+
+static function DebugAnim(KFMonster M)
+{
+    local int i;
+    local name seq;
+    local float frame, rate;
+    local vector HeadLoc, SrvLoc, Diff;
+    local coords C;
+
+    for ( i = 0; i < 2; ++i ) {
+        if ( !M.IsAnimating(i) )
+            continue;
+        M.GetAnimParams(i, seq, frame, rate);
+        log(M $ " channel="$i $ " anim="$seq $ " frame="$frame $ " rate="$rate);
+    }
+
+    C = M.GetBoneCoords(M.HeadBone);
+    HeadLoc = C.Origin + (M.HeadHeight * M.HeadScale * C.XAxis);
+    SrvLoc = M.Location + (M.OnlineHeadshotOffset >> M.Rotation);
+    Diff = SrvLoc - HeadLoc;
+    log(M $ " server/client head diff: "$ VSize(Diff)$"u ("$Diff$")");
 }
 
 static function ZedBeginPlay(KFMonster M)
@@ -128,4 +159,11 @@ static function ZedBeginPlay(KFMonster M)
 
 static function ZedDestroyed(KFMonster M)
 {
+}
+
+
+defaultproperties
+{
+    bHeadshotSrvAnim=false
+    bHeadshotSrvTorsoTwist=true
 }

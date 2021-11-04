@@ -70,7 +70,7 @@ simulated function HurtRadius( float DamageAmount, float DamageRadius, class<Dam
     {
         // don't let blast damage affect fluid - VisibleCollisingActors doesn't really work for them - jag
         if( (Victims != self) && (Hurtwall != Victims) && (Victims.Role == ROLE_Authority) && !Victims.IsA('FluidSurfaceInfo')
-         && ExtendedZCollision(Victims)==None )
+                && ExtendedZCollision(Victims)==None )
         {
             if( (Instigator==None || Instigator.Health<=0) && KFPawn(Victims)!=None )
                 Continue;
@@ -117,7 +117,7 @@ simulated function HurtRadius( float DamageAmount, float DamageRadius, class<Dam
                 {
                     // 20x more damage zeds
                     damageScale *= 20.0 * KFMonsterVictim.GetExposureTo(Location + 15 * -Normal(PhysicsVolume.Gravity));
-                    if ( ZombieFleshpound(KFMonsterVictim) != none )
+                    if ( ZombieFleshpound(KFMonsterVictim) != none || FemaleFP(KFMonsterVictim) != none )
                         damageScale *= 2.0; // compensate 50% dmg.res.
                 }
                 else if( KFP != none )
@@ -167,7 +167,7 @@ defaultproperties
     bBlockActors=false
     bBlockZeroExtentTraces=false
     bBlockNonZeroExtentTraces=false
-    bBlockHitPointTraces=False
+    bBlockHitPointTraces=false
 
     MyDamageType=Class'ScrnZedPack.DamTypeEMP'
     ExplosionEffect=class'KFMod.ZEDMKIISecondaryProjectileExplosion'

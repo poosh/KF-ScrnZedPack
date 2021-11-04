@@ -3,8 +3,6 @@ class HuskG extends ZedBaseHusk;
 
 #exec OBJ LOAD FILE=ScrnZedPack_T.utx
 
-var int ShotsRemaining;
-
 static simulated function PreCacheMaterials(LevelInfo myLevel)
 {
     myLevel.AddPrecacheMaterial(Texture'ScrnZedPack_T.husk_grittier.husk_grittier_diff');

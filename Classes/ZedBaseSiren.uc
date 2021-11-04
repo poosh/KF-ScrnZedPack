@@ -14,6 +14,13 @@ simulated function PostBeginPlay()
     ScreamRadiusSq = ScreamRadius ** 2;
     MoveScreamRadiusSq = (ScreamRadius * 0.25) ** 2;
     ForceScreamTime += Level.TimeSeconds;
+
+    if ( Role == ROLE_Authority ) {
+        if ( Level.Game.GameDifficulty < 5 ) {
+            // lower vortex pull on Hard and below
+            ScreamForce *= 0.05 * Level.Game.GameDifficulty;
+        }
+    }
 }
 
 simulated function Destroyed()
@@ -152,4 +159,5 @@ defaultproperties
     ScreamForce=150000  // made positive (push), invert for pawns, 0 for zeds
     ScreamDamage=6 // lowered scream damage to compensate fixed vortex pull
     ForceScreamTime=7
+    Mass=150
 }
