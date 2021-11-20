@@ -654,6 +654,16 @@ function PlayHit(float Damage, Pawn InstigatedBy, vector HitLocation, class<Dama
         Super.PlayHit(Damage, InstigatedBy, HitLocation, damageType, Momentum, HitIdx);
 }
 
+
+static function PreCacheMaterials(LevelInfo myLevel)
+{
+    local int i;
+
+    for ( i = 0; i < default.Skins.length; ++i ) {
+        myLevel.AddPrecacheMaterial(default.Skins[i]);
+    }
+}
+
 defaultproperties
 {
     RageDamageThreshold=50

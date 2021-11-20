@@ -33,7 +33,10 @@ function SpawnTwoShots() {
     local rotator FireRotation;
     local KFMonsterController KFMonstControl;
 
-    if( Controller!=None && KFDoorMover(Controller.Target)!=None ) {
+    if ( Controller == none )
+        return;
+
+    if( KFDoorMover(Controller.Target)!=None ) {
         Controller.Target.TakeDamage(22,Self,Location,vect(0,0,0),Class'DamTypeVomit');
         return;
     }

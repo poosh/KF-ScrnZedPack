@@ -245,7 +245,7 @@ function n_SpawnBeam()
 {
     if ( Controller == none || Controller.Target == none )
         return;
-        
+
     SpawnPrimaryBeam();
     if ( PrimaryBeam == none ) {
         log("Unable to spawn Primary Beam!", 'TeslaHusk');
@@ -738,7 +738,7 @@ state SelfDestruct
     }
 }
 
-static simulated function PreCacheMaterials(LevelInfo myLevel)
+static function PreCacheMaterials(LevelInfo myLevel)
 {
     myLevel.AddPrecacheMaterial(Shader'ScrnZedPack_T.TeslaHusk.TeslaHusk_SHADER');
     myLevel.AddPrecacheMaterial(FinalBlend'KFZED_FX_T.Energy.ZED_FX_Beam_FB');

@@ -206,8 +206,7 @@ function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector M
         if ( !KFDamType.default.bIsExplosive ) // all explosives: current, future and custom -- PooSH
         {
             // Don't reduce the damage so much if its a high headshot damage weapon
-            if( bIsHeadShot && KFDamType.default.HeadShotDamageMult >= 1.5 )
-            {
+            if( bIsHeadShot && KFDamType.default.HeadShotDamageMult >= 1.5 ) {
                 Damage *= 0.75;
             }
             else if ( Level.Game.GameDifficulty >= 5.0 && bIsHeadshot
@@ -216,21 +215,11 @@ function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector M
             {
                 Damage *= 0.35; // 65% damage reduction from xbow/m99 headshots
             }
-            else
-            {
+            else {
                 Damage *= 0.5;
             }
         }
-        // include subclasses = care about modders (c) PooSH
-        // Can't check subclasses of DamTypeFrag, because LAW is one of them
-        else if ( KFDamType == class'DamTypeFrag' || ClassIsChildOf(KFDamType, class'DamTypePipeBomb') )
-        {
-            Damage *= 1.25;
-        }
-        // M32 and SP are subclasses of DamTypeM79Grenade, so no need to additionally check those -- PooSH
-        else if( ClassIsChildOf(KFDamType, class'DamTypeM79Grenade')
-                || ClassIsChildOf(KFDamType, class'DamTypeM203Grenade') )
-        {
+        else if ( !ClassIsChildOf(KFDamType, class'DamTypeLAW') ) {
             Damage *= 1.25;
         }
     }

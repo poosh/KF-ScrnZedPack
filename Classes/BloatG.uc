@@ -77,6 +77,15 @@ simulated function AnimEnd(int Channel) {
         bAmIBarfing= false;
 }
 
+static function PreCacheMaterials(LevelInfo myLevel)
+{
+    local int i;
+
+    for ( i = 0; i < default.Skins.length; ++i ) {
+        myLevel.AddPrecacheMaterial(default.Skins[i]);
+    }
+}
+
 defaultproperties
 {
     DetachedArmClass=class'SeveredArmBloat'

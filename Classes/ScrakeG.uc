@@ -2,6 +2,15 @@ class ScrakeG extends ZedBaseScrake;
 
 #exec OBJ LOAD FILE=ScrnZedPack_T.utx
 
+static function PreCacheMaterials(LevelInfo myLevel)
+{
+    local int i;
+
+    for ( i = 0; i < default.Skins.length; ++i ) {
+        myLevel.AddPrecacheMaterial(default.Skins[i]);
+    }
+}
+
 defaultproperties
 {
     DetachedArmClass=class'SeveredArmScrake'
