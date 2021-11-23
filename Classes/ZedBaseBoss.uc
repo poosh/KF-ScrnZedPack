@@ -5,6 +5,11 @@ var class<ZedAvoidArea> AvoidAreaClass;
 var ZedAvoidArea AvoidArea;
 
 var bool bEndGameBoss;  // is this the end-game boss or just spawned mid-game
+var transient int NumPlayersSurrounding;
+var float RadialRange;
+var int RadialDamage;
+var transient int ClawDamageIndex;
+var transient vector ReferenceDir;
 
 simulated function PostBeginPlay()
 {
@@ -13,6 +18,7 @@ simulated function PostBeginPlay()
     if( ROLE==ROLE_Authority ) {
         SyringeCount = 3; // no healing for mid-game bosses
         Health *= 0.75; // less hp for mid-game bosses
+        RadialDamage *= DifficultyDamageModifer();
 
         AvoidArea = Spawn(AvoidAreaClass,self);
         if ( AvoidArea != none )
@@ -59,40 +65,17 @@ function bool IsHeadShot(vector HitLoc, vector ray, float AdditionalScale)
 function TakeDamage(int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector momentum, class<DamageType> DamType, optional int HitIndex)
 {
     local float DamagerDistSq;
-	local float UsedPipeBombDamScale;
-	local KFHumanPawn P;
-	local int NumPlayersSurrounding;
-	local bool bDidRadialAttack;
+    local float UsedPipeBombDamScale;
+    local bool bDidRadialAttack;
     local Pawn OldEnemy;
     local KFMonsterController MC;
 
     MC = KFMonsterController(Controller);
     OldEnemy = Controller.Enemy;
 
-    if ( Level.TimeSeconds > LastMeleeExploitCheckTime ) {
-        LastMeleeExploitCheckTime = Level.TimeSeconds + 1.0;
-        NumLumberJacks = 0;
-        NumNinjas = 0;
-
-        foreach CollidingActors(class'KFHumanPawn', P, 150, Location) {
-            if ( P.Health <= 0 )
-                continue;
-
-            NumPlayersSurrounding++;
-
-            if( KFMeleeGun(P.Weapon) != none ) {
-                if( Axe(P.Weapon) != none || Chainsaw(P.Weapon) != none ) {
-                    NumLumberJacks++;
-                }
-                else {
-                    NumNinjas++;
-                }
-            }
-        }
-        if( NumPlayersSurrounding >= 3 ) {
-            bDidRadialAttack = true;
-            GotoState('RadialAttack');
-        }
+    if ( CanRadialAttack() ) {
+        bDidRadialAttack = true;
+        GotoState('RadialAttack');
     }
 
     bOnlyDamagedByCrossbow = bOnlyDamagedByCrossbow && class<DamTypeCrossbow>(DamType) != none;
@@ -157,9 +140,40 @@ function TakeDamage(int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector mo
     }
 }
 
+function bool CanRadialAttack()
+{
+    local KFHumanPawn P;
+
+    if ( Level.Game.GameDifficulty < 4 )
+        return false;  // no radial attack on Normal
+
+    if ( Level.TimeSeconds < LastMeleeExploitCheckTime )
+        return false;
+    LastMeleeExploitCheckTime = Level.TimeSeconds + 0.5 + frand();
+    NumPlayersSurrounding = 0;
+    NumLumberJacks = 0;
+    NumNinjas = 0;
+
+    foreach CollidingActors(class'KFHumanPawn', P, 150, Location) {
+        if ( P.Health <= 0 )
+            continue;
+
+        NumPlayersSurrounding++;
+        if( KFMeleeGun(P.Weapon) != none ) {
+            if( Axe(P.Weapon) != none || Chainsaw(P.Weapon) != none ) {
+                NumLumberJacks++;
+            }
+            else {
+                NumNinjas++;
+            }
+        }
+    }
+    return NumPlayersSurrounding >= 3;
+}
+
 function bool NeedHealing()
 {
-    return SyringeCount < 3 && Health < HealingLevels[SyringeCount];
+    return SyringeCount < 3 && Health > 0 && Health < HealingLevels[SyringeCount];
 }
 
 function bool ShouldKnockDownFromDamage()
@@ -167,12 +181,105 @@ function bool ShouldKnockDownFromDamage()
     return true;
 }
 
+function GotoNextState()
+{
+    if ( NeedHealing() ) {
+        GotoState('Escaping');
+    }
+    else {
+        GotoState('');
+    }
+}
+
 state RadialAttack
 {
+    function BeginState()
+    {
+        super.BeginState();
+
+        // there are two ClawDamageTarget() calls during RadialAttack animation
+        // 0. Hit targets on the right
+        // 1. Hit targets on the left
+        ClawDamageIndex = 0;
+        ReferenceDir = vector(Rotation);
+    }
+
+    function EndState()
+    {
+        super.EndState();
+
+        LastMeleeExploitCheckTime = Level.TimeSeconds + 5.0 + 5.0*frand();
+    }
+
+    function bool CanRadialAttack()
+    {
+        return false;
+    }
+
     function bool ShouldKnockDownFromDamage()
     {
         return false;
     }
+
+    function ClawDamageTarget()
+    {
+        local Actor OldTarget;
+        local float OldMeleeRange;
+        local int UsedMeleeDamage;
+        local Pawn P;
+        local bool bPlayer;
+        local bool bDamagedSomeone;
+        local float ZedTimePossibility;
+        local vector PlayerDir, LeftDir;
+        local float FrontCos, LeftCos;
+
+        OldTarget = Controller.Target;
+        OldMeleeRange = MeleeRange;
+        CurrentDamtype = ZombieDamType[0];
+
+        foreach VisibleCollidingActors(class'Pawn', P, RadialRange) {
+            if ( P == self )
+                continue;
+            PlayerDir = Normal(P.Location - Location);
+            FrontCos = ReferenceDir dot PlayerDir;
+            if ( abs(FrontCos) < 0.9 ) {
+                // not directly in front or back. First hit to the right, second - to the left.
+                LeftDir = ReferenceDir cross vect(0,0,1);
+                LeftCos = PlayerDir dot LeftDir;
+                if ( (LeftCos > 0) != (ClawDamageIndex == 1) )
+                    continue;
+            }
+            bPlayer = P.Health > 0 && P.IsPlayerPawn();
+            Controller.Target = P;
+            MeleeRange = RadialRange;
+            UsedMeleeDamage = RadialDamage * (0.6 + 0.4*frand());
+            if ( MeleeDamageTarget(UsedMeleeDamage, damageForce * Normal(P.Location - Location)) ) {
+                bDamagedSomeone = true;
+                if ( bPlayer ) {
+                    ZedTimePossibility += 0.3;
+                }
+            }
+        }
+
+        Controller.Target = OldTarget;
+        MeleeRange = OldMeleeRange;
+
+        if ( bDamagedSomeone ) {
+            KFGameType(Level.Game).DramaticEvent(ZedTimePossibility);
+            PlaySound(MeleeAttackHitSound, SLOT_Interact, 2.0);
+        }
+        ++ClawDamageIndex;
+    }
+
+Begin:
+    // Don't let the zed move and play the radial attack
+    bShotAnim = true;
+    Acceleration = vect(0,0,0);
+    SetAnimAction('RadialAttack');
+    KFMonsterController(Controller).bUseFreezeHack = True;
+    HandleWaitForAnim('RadialAttack');
+    Sleep(GetAnimDuration('RadialAttack'));
+    GotoNextState();
 }
 
 state KnockDown // Knocked
@@ -195,4 +302,6 @@ State Escaping
 defaultproperties
 {
     AvoidAreaClass=class'ZedAvoidArea'
+    RadialRange=150
+    RadialDamage=70
 }

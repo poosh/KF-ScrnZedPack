@@ -20,6 +20,24 @@ simulated function bool HitCanInterruptAction()
     return (!bWaitForAnim && !bShotAnim);
 }
 
+function bool CanRadialAttack()
+{
+    local float h, r;
+
+    if ( Level.TimeSeconds < LastMeleeExploitCheckTime )
+        return false;
+
+    if ( super.CanRadialAttack() )
+        return true;
+
+    if ( NumPlayersSurrounding > 0 && Level.Game.GameDifficulty >= 5 && Level.Game.NumPlayers > 1 ) {
+        h = Health / HealthMax;
+        r = frand();
+        return r * NumPlayersSurrounding > h * 2.5;
+    }
+    return false;
+}
+
 function RangedAttack(Actor A)
 {
     local float D;
@@ -265,7 +283,7 @@ state FireChaingun
         Acceleration = vect(0,0,0);
         SetAnimAction('FireEndMG');
         HandleWaitForAnim('FireEndMG');
-        GoToState('');
+        GotoNextState();
     }
 
     function AnimEnd( int Channel )
@@ -410,7 +428,7 @@ state EscapeChaingun extends FireChaingun
 
     function FinishFire()
     {
-        GotoState('Escaping');
+        GotoNextState();
     }
 
     function bool ShouldKnockDownFromDamage()
@@ -624,6 +642,8 @@ defaultproperties
     MenuName="Hard Pat"
     ScoringValue=1000
     EscapeShieldDamageMult=0.2  // 80% resistance
+    ClawMeleeDamageRange=75
+    ImpaleMeleeDamageRange=85
 
     // copy-pasted from ZombieBoss_STANDARD
     RocketFireSound=SoundGroup'KF_EnemiesFinalSnd.Patriarch.Kev_FireRocket'

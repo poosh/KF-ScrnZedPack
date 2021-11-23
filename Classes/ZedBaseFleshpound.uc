@@ -44,11 +44,11 @@ function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector M
     if (damageType == class 'DamTypeVomit')
         return;  // full resistance to Bloat vomit
 
-    if( LastDamagedTime<Level.TimeSeconds )
-        TwoSecondDamageTotal = 0;
-
     KFDamType = class<KFWeaponDamageType>(damageType);
-    oldHealth= Health;
+    OldHealth = Health;
+    if( Level.TimeSeconds > LastDamagedTime )
+        TwoSecondDamageTotal = 0;
+    LastDamagedTime = Level.TimeSeconds + 2;
 
     if ( KFDamType != none ) {
         HeadShotCheckScale = 1.0;

@@ -2,6 +2,19 @@
 ScrN modification of custom monsters, adjusting game balance and bug fixes.
 
 # Version History
+### v9.69.01
+- Fixed a bug that prevented **FP** raging from damage < 300 (behaved like FFP)
+- Pat/HardPat's **Radial Attack**:
+  - Removed ridiculous double damage to players with >50 armor
+  - Made radial damage more consistent and scaled across difficulties.
+    Originally, Pat did 54-108 damage to unarmored players, 108 - 216 to armored.
+    Now, Pat does 52-87 damage on Hard, Suicidal: 63-105, Hoe: 73-122
+  - Radial Attack can be performed only on Hard+ difficulty
+  - Damage delivery matches the animation: first, Pat attacks players on the left, then on the right.
+    Players straightly in front and at the back are attacked twice.
+- Sui/HoE **HardPat**, when low on health, can perform Radial Attack against a single player (thanks *Vrana*)
+- Increased HardPat impale strike range from 0.9 to ~1.9m (thanks *#NikC-*)
+
 ### v2.00
 - Added and reworked all vanilla zeds to ScrnZedPack
 - Renamed most zed classes inside ScrnZedPack (check *ScrnWaves.ini*)

@@ -34,7 +34,7 @@ xcopy /F /I /Y *.md  %RELEASEDIR%
 mkdir %RELEASEDIR%\System 2>nul
 xcopy /F /I /Y %KFDIR%\System\%KFPACKAGE%.int %RELEASEDIR%\System\
 xcopy /F /I /Y %KFDIR%\System\%KFPACKAGE%.u %RELEASEDIR%\System\
-REM xcopy /F /I /Y %KFDIR%\System\%KFPACKAGE%.ucl %RELEASEDIR%\System\
+xcopy /F /I /Y %KFDIR%\System\%KFPACKAGE%.ucl %RELEASEDIR%\System\
 
 mkdir %RELEASEDIR%\Animations 2>nul
 xcopy /F /I /Y %STEAMDIR%\Animations\ScrnZedPack_A.ukx %RELEASEDIR%\Animations\
