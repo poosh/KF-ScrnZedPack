@@ -566,6 +566,7 @@ State Escaping
 
     function RangedAttack(Actor A)
     {
+        local float h;
         if ( bShotAnim || !IsCloseEnuf(A) )
             return;
 
@@ -573,12 +574,8 @@ State Escaping
             UnCloakBoss();
 
         bShotAnim = true;
-
-        if ( Level.Game.GameDifficulty < 5 || frand() > 0.25 * (SyringeCount + 1) ) {
-            Acceleration = (A.Location-Location);
-            SetAnimAction('MeleeClaw');
-        }
-        else {
+        h = Health / HealthMax;
+        if ( Level.Game.GameDifficulty >= 5 && (frand() < 0.25 * (SyringeCount + 1) || frand() > 3.0*h) ) {
             LastChainGunTime = Level.TimeSeconds + 5 + FRand() * 10;
             Acceleration = vect(0,0,0);
             SetAnimAction('PreFireMG');
@@ -586,6 +583,23 @@ State Escaping
             MGFireCounter = max(20, rand(30) + 3 * Level.Game.GameDifficulty * (SyringeCount+1));
             GoToState('EscapeChaingun');
         }
+        else {
+            Acceleration = (A.Location-Location);
+            SetAnimAction('MeleeClaw');
+        }
+    }
+}
+
+state Healing // Healing
+{
+    function bool CanRadialAttack()
+    {
+        return false;
+    }
+
+    function bool ShouldKnockDownFromDamage()
+    {
+        return Level.Game.GameDifficulty < 5;
     }
 }
 

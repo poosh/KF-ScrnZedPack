@@ -2,6 +2,10 @@
 ScrN modification of custom monsters, adjusting game balance and bug fixes.
 
 # Version History
+### v9.69.06
+- **HardPat** can fire chaingun on escaping when low on health
+- Players cannot interrupt HardPat's healing process by dealing damage on Suicidal/HoE
+
 ### v9.69.01
 - Fixed a bug that prevented **FP** raging from damage < 300 (behaved like FFP)
 - Pat/HardPat's **Radial Attack**:
