@@ -7,6 +7,7 @@ var bool bMovingChaingunAttack;
 var(Sounds) sound SaveMeSound;
 
 var float EscapeShieldDamageMult;  // damage reduction while escaping
+var float HealingShieldDamageMultHoE;  // damage reduction while healing (HoE only)
 
 replication
 {
@@ -80,7 +81,7 @@ function RangedAttack(Actor A)
             Return;
         }
         SetAnimAction('transition');
-        GoToState('SneakAround');
+        GotoState('SneakAround');
     }
     else if( bChargingPlayer && (bOnlyE || D<200) )
         Return;
@@ -88,7 +89,7 @@ function RangedAttack(Actor A)
         (Level.TimeSeconds - LastChargeTime > (5.0 + 5.0 * FRand())) )  // Don't charge again for a few seconds
     {
         SetAnimAction('transition');
-        GoToState('Charging');
+        GotoState('Charging');
     }
     else if( LastMissileTime<Level.TimeSeconds && (D>500 || SyringeCount>=2) )
     {
@@ -106,7 +107,7 @@ function RangedAttack(Actor A)
 
         HandleWaitForAnim('PreFireMissile');
 
-        GoToState('FireMissile');
+        GotoState('FireMissile');
     }
     else if ( !bWaitForAnim && !bShotAnim && LastChainGunTime<Level.TimeSeconds )
     {
@@ -129,7 +130,7 @@ function RangedAttack(Actor A)
             MGFireCounter = max(35, Rand(60) + 5 * Level.Game.GameDifficulty);
 
 
-        GoToState('FireChaingun');
+        GotoState('FireChaingun');
     }
 }
 
@@ -231,9 +232,8 @@ state KnockDown
     Ignores RangedAttack;
 
 Begin:
-    if ( Health > 0 )
-    {
-        Sleep(GetAnimDuration('KnockDown'));
+    Sleep(GetAnimDuration('KnockDown'));
+    if ( Health > 0 ) {
         CloakBoss();
         PlaySound(SaveMeSound, SLOT_Misc, 2.0,,500.0);
 
@@ -243,10 +243,6 @@ Begin:
         }
 
         GotoState('Escaping');
-    }
-    else
-    {
-       GotoState('');
     }
 }
 
@@ -258,6 +254,7 @@ state FireChaingun
         bMovingChaingunAttack = Level.Game.GameDifficulty >= 4 && SyringeCount >= 2 && (bEndGameBoss || FRand() < 0.4);
         bChargingPlayer = Level.Game.GameDifficulty >= 5 && bEndGameBoss && SyringeCount >= 3 && FRand() < 0.4f;
         bCanStrafe = true;
+        LastMeleeExploitCheckTime = Level.TimeSeconds + 3.0; // prevent Radial attack at the beginning of firing
     }
 
     function EndState()
@@ -354,8 +351,11 @@ state FireChaingun
     function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector Momentum, class<DamageType> damageType, optional int HitIndex)
     {
         local float EnemyDistSq, DamagerDistSq;
-        global.TakeDamage(Damage,instigatedBy,hitlocation,Momentum,damageType);
-        if( bMovingChaingunAttack || Health<=0 || InstigatedBy == none || !InstigatedBy.IsHumanControlled() )
+
+        global.TakeDamage(Damage, instigatedBy, hitlocation, Momentum, damageType, HitIndex);
+
+        if( bMovingChaingunAttack || Health<=0 || InstigatedBy == none || !InstigatedBy.IsHumanControlled()
+                || NeedHealing() )
             return;
 
         // if someone close up is shooting us, just charge them
@@ -363,7 +363,7 @@ state FireChaingun
 
         if( (ChargeDamage > 200 && DamagerDistSq < 250000) || DamagerDistSq < 10000 ) {
             SetAnimAction('transition');
-            GoToState('Charging');
+            GotoState('Charging');
             return;
         }
 
@@ -379,7 +379,7 @@ state FireChaingun
 
             if( DamagerDistSq < 250000 ) {
                 SetAnimAction('transition');
-                GoToState('Charging');
+                GotoState('Charging');
             }
         }
     }
@@ -438,7 +438,7 @@ state EscapeChaingun extends FireChaingun
 
     function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector Momentum, class<DamageType> damageType, optional int HitIndex)
     {
-        global.TakeDamage(Damage,instigatedBy,hitlocation,Momentum,damageType);
+        global.TakeDamage(Damage, instigatedBy, hitlocation, Momentum, damageType, HitIndex);
     }
 }
 
@@ -452,6 +452,7 @@ state FireMissile
             Controller.Focus = A;
         }
     }
+
     function BeginState()
     {
         if ( bEndGameBoss ) {
@@ -468,6 +469,12 @@ state FireMissile
         }
         bFirstMissile = true;
         Acceleration = vect(0,0,0);
+        LastMeleeExploitCheckTime = Level.TimeSeconds + 3.0; // prevent Radial attack at the beginning of firing
+    }
+
+    function bool ShouldKnockDownFromDamage()
+    {
+        return Level.Game.GameDifficulty < 5 || !bFirstMissile;
     }
 
     function AnimEnd( int Channel )
@@ -510,11 +517,12 @@ state FireMissile
         }
 
         if( --MissilesLeft <= 0 )
-            GoToState('');
+            GotoNextState();
         else {
-            GoToState(,'SecondMissile');
+            GotoState(,'SecondMissile');
         }
     }
+
 Begin:
     while ( true )
     {
@@ -561,7 +569,7 @@ State Escaping
             if ( Damage <= 0 )
                 return;
         }
-        global.TakeDamage(Damage,instigatedBy,hitlocation,Momentum,damageType);
+        global.TakeDamage(Damage, instigatedBy, hitlocation, Momentum, damageType, HitIndex);
     }
 
     function RangedAttack(Actor A)
@@ -581,7 +589,7 @@ State Escaping
             SetAnimAction('PreFireMG');
             HandleWaitForAnim('PreFireMG');
             MGFireCounter = max(20, rand(30) + 3 * Level.Game.GameDifficulty * (SyringeCount+1));
-            GoToState('EscapeChaingun');
+            GotoState('EscapeChaingun');
         }
         else {
             Acceleration = (A.Location-Location);
@@ -601,6 +609,18 @@ state Healing // Healing
     {
         return Level.Game.GameDifficulty < 5;
     }
+
+    function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector Momentum, class<DamageType> damageType, optional int HitIndex)
+    {
+        if ( Level.Game.GameDifficulty >= 7 ) {
+            Damage *= HealingShieldDamageMultHoE;
+        }
+        global.TakeDamage(Damage, instigatedBy, hitlocation, Momentum, damageType, HitIndex);
+    }
+
+Begin:
+    Sleep(GetAnimDuration('Heal'));
+    GotoNextState();
 }
 
 State SneakAround
@@ -610,22 +630,24 @@ State SneakAround
         super.BeginState();
         SneakStartTime = Level.TimeSeconds+10.f+FRand()*15.f;
     }
+
     function EndState()
     {
         super.EndState();
         LastSneakedTime = Level.TimeSeconds+20.f+FRand()*30.f;
         if( Controller!=None && Controller.IsInState('PatFindWay') )
-            Controller.GoToState('ZombieHunt');
+            Controller.GotoState('ZombieHunt');
     }
+
     function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector Momentum, class<DamageType> damageType, optional int HitIndex)
     {
-        global.TakeDamage(Damage,instigatedBy,hitlocation,Momentum,damageType);
+        global.TakeDamage(Damage, instigatedBy, hitlocation, Momentum, damageType, HitIndex);
         if( Health<=0 )
             return;
 
         // if someone close up is shooting us, just charge them
         if( InstigatedBy!=none && VSizeSquared(Location - InstigatedBy.Location)<62500 )
-            GoToState('Charging');
+            GotoState('Charging');
     }
 
 Begin:
@@ -641,9 +663,9 @@ Begin:
         if( !Controller.IsInState('PatFindWay') )
         {
             if( Level.TimeSeconds>SneakStartTime )
-                GoToState('');
+                GotoNextState();
             if( !Controller.IsInState('WaitForAnim') && !Controller.IsInState('ZombieHunt') )
-                Controller.GoToState('ZombieHunt');
+                Controller.GotoState('ZombieHunt');
         }
         else SneakStartTime = Level.TimeSeconds+30.f;
     }
@@ -656,6 +678,7 @@ defaultproperties
     MenuName="Hard Pat"
     ScoringValue=1000
     EscapeShieldDamageMult=0.2  // 80% resistance
+    HealingShieldDamageMultHoE=0.5  // 50% resistance
     ClawMeleeDamageRange=75
     ImpaleMeleeDamageRange=85
 

@@ -186,7 +186,7 @@ function GotoNextState()
     if ( NeedHealing() ) {
         GotoState('Escaping');
     }
-    else {
+    else if ( Health > 0 ) {
         GotoState('');
     }
 }
@@ -301,6 +301,7 @@ State Escaping
 
 defaultproperties
 {
+    ControllerClass=class'ScrnZedPack.ZedControllerBoss'
     AvoidAreaClass=class'ZedAvoidArea'
     RadialRange=150
     RadialDamage=70

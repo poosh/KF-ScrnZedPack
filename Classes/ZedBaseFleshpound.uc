@@ -117,5 +117,6 @@ function bool SameSpeciesAs(Pawn P)
 
 defaultproperties
 {
+    ControllerClass=class'ScrnZedPack.ZedControllerFleshpound'
     AvoidAreaClass=class'ZedAvoidArea'
 }

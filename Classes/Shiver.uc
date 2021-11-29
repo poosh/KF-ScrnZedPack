@@ -461,6 +461,7 @@ static function PreCacheMaterials(LevelInfo myLevel)
 
 defaultproperties
 {
+    ControllerClass=class'ScrnZedPack.ZedController'
     WalkAnim="ClotWalk"
     RunAnim="Run"
     MaxHeadTime=0.100000

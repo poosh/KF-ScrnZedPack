@@ -1,4 +1,4 @@
-class BruteController extends KFMonsterController;
+class BruteController extends ZedController;
 
 var     float       RageAnimTimeout;            // How long until the RageAnim is completed; Hack so the server doesn't get stuck in idle when its doing the Rage anim
 var        bool        bDoneSpottedCheck;
@@ -47,7 +47,7 @@ state ZombieCharge
     {
         return false;
     }
-    
+
     function Timer()
     {
         Disable('NotifyBump');

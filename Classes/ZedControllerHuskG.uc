@@ -1,5 +1,5 @@
 // Code originally was taken from Scary Ghost's Super Zombies mutator
-class HuskZombieControllerSE extends HuskZombieController;
+class ZedControllerHuskG extends ZedControllerHusk;
 
 var float aimAtFeetZDelta;
 

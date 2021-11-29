@@ -103,5 +103,5 @@ defaultproperties
     MenuName="Grittier Husk"
     ShotsRemaining=4
     MaxMeleeAttacks=1
-    ControllerClass=Class'ScrnZedPack.HuskZombieControllerSE'
+    ControllerClass=Class'ScrnZedPack.ZedControllerHuskG'
 }

@@ -2,6 +2,11 @@
 ScrN modification of custom monsters, adjusting game balance and bug fixes.
 
 # Version History
+### v9.69.07
+- **HardPat** gets 50% damage resistance during the healing process on HoE
+- HardPat cannot be knocked down while shooting the first rocket on Suicidal/HoE
+- Fixed "NoiseMaker" warning
+
 ### v9.69.06
 - **HardPat** can fire chaingun on escaping when low on health
 - Players cannot interrupt HardPat's healing process by dealing damage on Suicidal/HoE

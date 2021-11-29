@@ -1,14 +1,11 @@
-//-----------------------------------------------------------
-//
-//-----------------------------------------------------------
-class HardPatController extends BossZombieController;
+class HardPatController extends ZedControllerBoss;
 
 var NavigationPoint MidGoals[2];
 var byte ReachOffset;
 var Actor OldPathsCheck[3];
 
 
-final function FindPathAround()
+function FindPathAround()
 {
     local Actor Res;
     local NavigationPoint N;
@@ -56,7 +53,8 @@ final function FindPathAround()
     if( ReachOffset<2 )
         GoToState('PatFindWay');
 }
-final function NavigationPoint GetMidPoint()
+
+function NavigationPoint GetMidPoint()
 {
     local byte n;
 
@@ -67,7 +65,8 @@ final function NavigationPoint GetMidPoint()
         return None;
     return NavigationPoint(RouteCache[(n-1)*0.5]);
 }
-final function bool CompareOldPaths()
+
+function bool CompareOldPaths()
 {
     local byte n,i;
 
@@ -81,7 +80,8 @@ final function bool CompareOldPaths()
     }
     return true;
 }
-final function SetOldPaths()
+
+function SetOldPaths()
 {
     local byte n;
 
@@ -90,7 +90,8 @@ final function SetOldPaths()
     if( RouteCache[1]==None )
         OldPathsCheck[0] = RouteCache[0];
 }
-final function GetMidGoals()
+
+function GetMidGoals()
 {
     local byte n;
 

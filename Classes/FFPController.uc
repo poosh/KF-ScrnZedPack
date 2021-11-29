@@ -2,7 +2,7 @@
 //Still behaves like a Fleshpound for the most part, although quicker to rage.
 //Thanks to Scary for the work on this one. - Whisky
 //-----------------------------------------------------------
-class FFPController extends FleshpoundZombieController;
+class FFPController extends ZedControllerFleshpound;
 
 var float RageFrustrationThreshholdRand;
 

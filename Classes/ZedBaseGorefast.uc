@@ -29,4 +29,5 @@ function TakeDamage(int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector mo
 
 defaultproperties
 {
+    ControllerClass=class'ScrnZedPack.ZedControllerGorefast'
 }

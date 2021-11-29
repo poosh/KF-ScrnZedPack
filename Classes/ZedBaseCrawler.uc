@@ -48,6 +48,7 @@ event Bump(actor Other)
 
 defaultproperties
 {
+    ControllerClass=class'ScrnZedPack.ZedControllerCrawler'
     Mass=20
     // Crawler does not have "Jump" animation
     TakeoffAnims(0)="ZombieSpring"
