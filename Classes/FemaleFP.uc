@@ -187,8 +187,8 @@ function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector M
     local float HeadShotCheckScale;
     local class<KFWeaponDamageType> KFDamType;
 
-    if (damageType == class 'DamTypeVomit')
-        return;  // full resistance to Bloat vomit
+    if ( damageType == class'DamTypeVomit' || damageType == class'DamTypeTeslaBeam' )
+        return;  // full resistance
 
     // optimizes typecasting and make code comre compact -- PooSH
     KFDamType = class<KFWeaponDamageType>(damageType);

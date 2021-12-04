@@ -2,7 +2,12 @@
 class TeslaHuskEMPCharge extends Nade;
 
 var() class<Emitter> ExplosionEffect;
+var() float ZedDamageScale, FPDamageScale;
+var() float PlayerDamageRadius;
+var class<KFWeaponDamageType> SelfDestructDamType;
+
 var Pawn Killer;
+var Controller KillerController;
 
 function Timer()
 {
@@ -22,7 +27,7 @@ function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector M
 
 simulated function Explode(vector HitLocation, vector HitNormal)
 {
-    local PlayerController  LocalPlayer;
+    local PlayerController LocalPlayer;
 
     bHasExploded = True;
     BlowUp(HitLocation);
@@ -41,8 +46,8 @@ simulated function Explode(vector HitLocation, vector HitNormal)
         LocalPlayer.ShakeView(RotMag, RotRate, RotTime, OffsetMag, OffsetRate, OffsetTime);
 
     if ( Instigator != none ) {
-        // blow up the instigator
-        Instigator.TakeDamage(1000000, Killer, Instigator.Location, vect(0,0,1), MyDamageType);
+        // blow up the TeslaHusk
+        Instigator.TakeDamage(Instigator.Health * 4, Killer, Instigator.Location, vect(0,0,1), SelfDestructDamType);
     }
 
     Destroy();
@@ -50,105 +55,83 @@ simulated function Explode(vector HitLocation, vector HitNormal)
 
 simulated function HurtRadius( float DamageAmount, float DamageRadius, class<DamageType> DamageType, float Momentum, vector HitLocation )
 {
-    local actor Victims;
-    local float damageScale, dist;
-    local vector dir;
-    local KFMonster KFMonsterVictim;
-    local Pawn P;
+    local Pawn DamageDealer;
+    local Controller DamageDealerC;
+    local actor Victim;
+    local KFMonster M;
     local KFPawn KFP;
-    local array<Pawn> CheckedPawns;
-    local int i;
-    local bool bAlreadyChecked;
+    local vector dir;
+    local float damageScale, dist;
+    local int ActualDamage;
 
+    if ( Instigator == none || Instigator.Health <= 0 )
+        return;  // deactivate self explosion on death
 
     if ( bHurtEntry )
         return;
-
     bHurtEntry = true;
 
-    foreach CollidingActors (class 'Actor', Victims, DamageRadius, HitLocation)
-    {
-        // don't let blast damage affect fluid - VisibleCollisingActors doesn't really work for them - jag
-        if( (Victims != self) && (Hurtwall != Victims) && (Victims.Role == ROLE_Authority) && !Victims.IsA('FluidSurfaceInfo')
-                && ExtendedZCollision(Victims)==None )
+    // prevent TeslaHusk to block traces
+    Instigator.SetCollision(false, false);
+
+    foreach CollidingActors (class 'Actor', Victim, DamageRadius, HitLocation) {
+        if ( Victim == self || Victim == Instigator || Victim == Hurtwall || Victim.Role != ROLE_Authority
+                || Victim.IsA('FluidSurfaceInfo') || Victim.IsA('ExtendedZCollision') )
         {
-            if( (Instigator==None || Instigator.Health<=0) && KFPawn(Victims)!=None )
-                Continue;
-            dir = Victims.Location - HitLocation;
-            dist = FMax(1,VSize(dir));
-            dir = dir/dist;
-            damageScale = 1 - FMax(0,(dist - Victims.CollisionRadius)/DamageRadius);
+            continue;
+        }
 
-            if ( Instigator == None || Instigator.Controller == None )
-            {
-                Victims.SetDelayedDamageInstigatorController( InstigatorController );
+        M = KFMonster(Victim);
+        KFP = KFPawn(Victim);
+        // TeslaHusk instigate damage to humans - to prevent friendly fire scale apply
+        // Otherwise use Killer as instigator to count kill score
+        if ( KFP == none && KillerController != none ) {
+            DamageDealer = Killer;
+            DamageDealerC = KillerController;
+        }
+        else {
+            DamageDealer = Instigator;
+            DamageDealerC = Instigator.Controller;
+        }
+        if ( DamageDealer == none ) {
+            Victim.SetDelayedDamageInstigatorController(DamageDealerC);
+        }
+
+        dir = Victim.Location - HitLocation;
+        dist = fmax(1.0, VSize(dir));
+        dir = dir / dist;
+        damageScale = 1.0 - fmax(0, (dist - Victim.CollisionRadius - Instigator.CollisionRadius) / DamageRadius);
+        if ( M != none ) {
+            if ( M.IsA('ZombieFleshpound') || M.IsA('FemaleFP') ) {
+                damageScale *= FPDamageScale;
             }
-
-            P = Pawn(Victims);
-
-            if( P != none )
-            {
-                for (i = 0; i < CheckedPawns.Length; i++)
-                {
-                    if (CheckedPawns[i] == P)
-                    {
-                        bAlreadyChecked = true;
-                        break;
-                    }
-                }
-
-                if( bAlreadyChecked )
-                {
-                    bAlreadyChecked = false;
-                    P = none;
-                    continue;
-                }
-
-                KFMonsterVictim = KFMonster(Victims);
-
-                if( KFMonsterVictim != none && KFMonsterVictim.Health <= 0 )
-                {
-                    KFMonsterVictim = none;
-                }
-
-                KFP = KFPawn(Victims);
-
-                if( KFMonsterVictim != none )
-                {
-                    // 20x more damage zeds
-                    damageScale *= 20.0 * KFMonsterVictim.GetExposureTo(Location + 15 * -Normal(PhysicsVolume.Gravity));
-                    if ( ZombieFleshpound(KFMonsterVictim) != none || FemaleFP(KFMonsterVictim) != none )
-                        damageScale *= 2.0; // compensate 50% dmg.res.
-                }
-                else if( KFP != none )
-                {
-                    damageScale *= KFP.GetExposureTo(Location + 15 * -Normal(PhysicsVolume.Gravity));
-                }
-
-                CheckedPawns[CheckedPawns.Length] = P;
-
-                if ( damageScale <= 0)
-                {
-                    P = none;
-                    continue;
-                }
-                else
-                {
-                    //Victims = P;
-                    P = none;
-                }
+            else {
+                damageScale *= ZedDamageScale;
             }
+            damageScale *= M.GetExposureTo(HitLocation);
+        }
+        else if ( KFP != none ) {
+            if ( dist > PlayerDamageRadius )
+                continue;
+            damageScale = 1.0 - fmax(0, (dist - Victim.CollisionRadius - Instigator.CollisionRadius) / PlayerDamageRadius);
+            damageScale *= KFP.GetExposureTo(HitLocation);
+        }
 
-            Victims.TakeDamage(damageScale * DamageAmount, Killer,Victims.Location - 0.5 * (Victims.CollisionHeight + Victims.CollisionRadius)
-             * dir,(damageScale * Momentum * dir),DamageType);
+        ActualDamage = damageScale * DamageAmount;
+        if ( ActualDamage <= 0 )
+            continue;
 
-            if (Vehicle(Victims) != None && Vehicle(Victims).Health > 0)
-            {
-                Vehicle(Victims).DriverRadiusDamage(DamageAmount, DamageRadius, InstigatorController, DamageType, Momentum, HitLocation);
-            }
+        Victim.TakeDamage(ActualDamage, DamageDealer,
+                Victim.Location - 0.5 * (Victim.CollisionHeight + Victim.CollisionRadius) * dir,
+                damageScale * Momentum * dir,
+                DamageType);
+
+        if ( Vehicle(Victim) != None && Vehicle(Victim).Health > 0 ) {
+            Vehicle(Victim).DriverRadiusDamage(ActualDamage, DamageRadius, DamageDealerC, DamageType, Momentum, HitLocation);
         }
     }
 
+    Instigator.SetCollision(true, true);
     bHurtEntry = false;
 }
 
@@ -169,11 +152,16 @@ defaultproperties
     bBlockNonZeroExtentTraces=false
     bBlockHitPointTraces=false
 
-    MyDamageType=Class'ScrnZedPack.DamTypeEMP'
+    MyDamageType=class'ScrnZedPack.DamTypeEMP'
+    SelfDestructDamType=class'ScrnZedPack.DamTypeEMPSelfDestruct'
     ExplosionEffect=class'KFMod.ZEDMKIISecondaryProjectileExplosion'
 
     Speed=0
+    Physics=PHYS_None
 
-    Damage=50
+    Damage=50  // replaced by TeslaHusk.EmpDamagePerEnergy
     DamageRadius=400 // 8 meters
+    PlayerDamageRadius=300 // 6 meters. Lower damage radius vs/ players to match ExplosionEffect
+    ZedDamageScale=20.0
+    FPDamageScale=40.0
 }

@@ -16,6 +16,9 @@ function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector M
     local class<KFWeaponDamageType> KFDamType;
     local int i;
 
+    if ( damageType == class'DamTypeVomit' || damageType == class'DamTypeTeslaBeam' )
+        return;  // full resistance
+
     // optimizes typecasting and make code comre compact -- PooSH
     KFDamType = class<KFWeaponDamageType>(damageType);
     oldHealth= Health;

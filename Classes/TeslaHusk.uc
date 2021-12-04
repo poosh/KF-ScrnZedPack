@@ -11,32 +11,37 @@ var TeslaBeam PrimaryBeam;
 var float MaxPrimaryBeamRange; // how far Husk can shoot with his tesla gun?
 var float MaxChildBeamRange; // max distance from primary target for a chain reaction
 var float ChainedBeamRangeExtension; // if pawn is already chained, chain max range is multiplied by this value
+var float MaxHealingRange; // how far Husk can heal zeds
 // used for optimization
-var private float MaxPrimaryBeamRangeSquared, MaxChildBeamRangeSquared;
+var transient float MaxPrimaryBeamRangeSquared, MaxChildBeamRangeSquared, MaxHealingRangeSquared;
 
 var float Energy;
 var float EnergyMax;
 var float EnergyRestoreRate;
 
 var()    float              DischargeDamage; // beam damage per second
+var()    float              MaxDischargeTime;
 var()    float              ChainDamageMult; // how much damage drops on the next chain
-var()    class<DamageType> MyDamageType;
-var()    byte              MaxChainLevel;
-var()    int                    MaxChainActors;
+var()    class<DamageType>  MyDamageType;
+var()    byte               MaxChainLevel;
+var()    int                MaxChainActors;
 
-var ZedBeamSparks            DecapitationSparks;
+var ZedBeamSparks           DecapitationSparks;
 
 var bool    bChainThoughZED; // chain tesla beam though a zed, which is between target and the husk, to extend firing range
 var transient float     NextChainZedSearchTime;
-var transient float     ChainRebuildTimer; // how many seconds between rebuilding chained actors
+var transient float     NextChainRebuildTime; // how many seconds between rebuilding chained actors
 
 var float DischargeRate; // time between damaging chained pawns. Do not set it too low due to rounding precission of DischargeDamage
 var transient float LastDischargeTime;
 
-// Tesla Husks are able to heal each other.
-var() float     HealRate;          // Percent of HealthMax to heal per second
+// Tesla Husks are able to heal each other (and Fleshpounds)
+var() float     HealRate, HealHeadRate;  // Percent of HealthMax to heal per second
 var() float     HealEnergyDrain; // amount of energy required to heal 1%
-var transient float NextHealAttemptTime, LastHealTime;
+var transient float NextHealAttemptTime, LastHealTime, NextHealTime;
+
+var() float EmpDamagePerEnergy;
+var() int EmpDamageMin;
 
 var vector HeadOffset;
 
@@ -47,6 +52,7 @@ struct SActorDamages
     var int Damage;
 };
 var protected array<SActorDamages> DischargedActors;
+var Pawn IntermediateTarget;
 
 simulated function PostBeginPlay()
 {
@@ -68,6 +74,7 @@ simulated function PostBeginPlay()
             EnergyMax *= 1.35;
             EnergyRestoreRate *= 1.35;
             MaxPrimaryBeamRange *= 1.35;
+            MaxHealingRange *= 1.35;
             MaxChildBeamRange *= 1.35;
         }
         else if( Level.Game.GameDifficulty < 7.0 ) {
@@ -77,6 +84,8 @@ simulated function PostBeginPlay()
             EnergyRestoreRate *= 1.55;
             MaxPrimaryBeamRange *= 1.55;
             MaxChildBeamRange *= 1.55;
+            MaxHealingRange *= 1.55;
+            bChainThoughZED = true;
         }
         else {
             // HoE
@@ -85,13 +94,14 @@ simulated function PostBeginPlay()
             EnergyRestoreRate *= 1.75;
             MaxPrimaryBeamRange *= 1.75;
             MaxChildBeamRange *= 1.75;
-            // disabled due to bugs
-            //bChainThoughZED = true;
+            MaxHealingRange *= 1.75;
+            bChainThoughZED = true;
         }
     }
     Energy = EnergyMax;
-    MaxPrimaryBeamRangeSquared = MaxPrimaryBeamRange * MaxPrimaryBeamRange;
-    MaxChildBeamRangeSquared = MaxChildBeamRange * MaxChildBeamRange;
+    MaxPrimaryBeamRangeSquared = square(MaxPrimaryBeamRange);
+    MaxChildBeamRangeSquared = square(MaxChildBeamRange);
+    MaxHealingRangeSquared = square(MaxHealingRange);
     NextHealAttemptTime = Level.TimeSeconds + 5.0;
 
     super.PostBeginPlay();
@@ -162,7 +172,6 @@ function TeslaBeam SpawnTeslaBeam()
     return beam;
 }
 
-
 function TeslaBeam SpawnPrimaryBeam()
 {
     if ( PrimaryBeam == none ) {
@@ -184,76 +193,109 @@ function FreePrimaryBeam()
     }
 }
 
+function TeslaBeam SpawnChildBeam(TeslaBeam MasterBeam, Actor EndActor)
+{
+    local TeslaBeam ChildBeam;
+
+    ChildBeam = SpawnTeslaBeam();
+    if ( ChildBeam != none ) {
+        ChildBeam.StartActor = MasterBeam.EndActor;
+        ChildBeam.EndActor = EndActor;
+        ChildBeam.EffectEndTime = MasterBeam.EffectEndTime;
+        MasterBeam.ChildBeams[MasterBeam.ChildBeams.length] = ChildBeam;
+    }
+    return ChildBeam;
+}
+
 function RangedAttack(Actor A)
 {
     local float Dist;
     local KFMonster M;
+    local bool bShoot;
 
     if ( bShotAnim || bDecapitated )
         return;
 
+    // better to heal than attack some crap
+    if ( KFPawn(A) == none && TryHealing() )
+        return;
+
     Dist = VSize(A.Location - Location);
+
 
     if ( Physics == PHYS_Swimming )
     {
         SetAnimAction('Claw');
         bShotAnim = true;
     }
-    else if ( Energy < 25 && Dist < MeleeRange + CollisionRadius + A.CollisionRadius ) // do melee hits only when low on energy
+    else if ( (Energy < 30 || Level.TimeSeconds < NextFireProjectileTime)
+            && Dist < MeleeRange + CollisionRadius + A.CollisionRadius )
     {
+        // do melee hits only when low on energy
         bShotAnim = true;
         SetAnimAction('Claw');
         //PlaySound(sound'Claw2s', SLOT_Interact); KFTODO: Replace this
         Controller.bPreparingMove = true;
         Acceleration = vect(0,0,0);
     }
-    else if ( Energy > 25 && Dist < MaxPrimaryBeamRange*(0.7 + 0.3*frand()) )
-    {
-        bShotAnim = true;
 
+    if ( Energy > 25 && Level.TimeSeconds > NextFireProjectileTime ) {
+        if ( Dist < MaxPrimaryBeamRange*(0.7 + 0.3*frand()) )
+        {
+            IntermediateTarget = none;
+            bShoot = true;
+        }
+        else if ( !TryHealing() && bChainThoughZED && Energy > 50 && Level.TimeSeconds > NextChainZedSearchTime
+                    && Controller.Enemy == A && KFPawn(A) != none
+                    && Dist < MaxPrimaryBeamRange * 1.9 )
+            {
+                NextChainZedSearchTime = Level.TimeSeconds + 1.0;
+                foreach VisibleCollidingActors(class'KFMonster', M, MaxPrimaryBeamRange*0.9) {
+                    if ( !M.bDeleteMe && M.Health > 0 && TeslaHusk(M) == none
+                            && VSizeSquared(M.Location - A.Location) < MaxPrimaryBeamRangeSquared
+                            && M.FastTrace(A.Location, M.Location) )
+                    {
+                        IntermediateTarget = M;
+                        bShoot = true;
+                        break;
+                    }
+                }
+            }
+    }
+
+    if ( bShoot ) {
+        bShotAnim = true;
         SetAnimAction('ShootBurns');
         Controller.bPreparingMove = true;
         Acceleration = vect(0,0,0);
-
-        NextFireProjectileTime = Level.TimeSeconds + ProjectileFireInterval + (FRand() * 2.0);
-    }
-    else if ( bChainThoughZED && Energy > 50 && Controller.Enemy == A && KFPawn(A) != none
-            && NextChainZedSearchTime < Level.TimeSeconds
-            && Dist < MaxPrimaryBeamRange + MaxChildBeamRange )
-    {
-        NextChainZedSearchTime = Level.TimeSeconds + 3.0;
-        foreach VisibleCollidingActors(class'KFMonster', M, MaxPrimaryBeamRange*0.9) {
-            if ( !M.bDeleteMe && M.Health > 0 && TeslaHusk(M) == none
-                && VSizeSquared(M.Location - A.Location) < MaxChildBeamRangeSquared*0.9
-                && M.FastTrace(A.Location, M.Location) )
-            {
-                Controller.Target = M;
-                bShotAnim = true;
-
-                SetAnimAction('ShootBurns');
-                Controller.bPreparingMove = true;
-                Acceleration = vect(0,0,0);
-
-                NextFireProjectileTime = Level.TimeSeconds + ProjectileFireInterval + (FRand() * 2.0);
-                return;
-            }
-        }
+        NextFireProjectileTime = Level.TimeSeconds + MaxDischargeTime + ProjectileFireInterval * (0.8 + 0.4*frand());
     }
 }
+
+function Heal(KFMonster Patient, float dt);
 
 function n_SpawnBeam()
 {
     if ( Controller == none || Controller.Target == none )
         return;
 
-    SpawnPrimaryBeam();
-    if ( PrimaryBeam == none ) {
-        log("Unable to spawn Primary Beam!", 'TeslaHusk');
-        return;
+    if ( IntermediateTarget != none ) {
+        if ( !Controller.LineOfSightTo(IntermediateTarget)
+                || !FastTrace(IntermediateTarget.Location, Controller.Target.Location) )
+            return;
+
+        SpawnPrimaryBeam();
+        PrimaryBeam.EndActor = IntermediateTarget;
+        PrimaryBeam.EffectEndTime = Level.TimeSeconds + MaxDischargeTime;
+        SpawnChildBeam(PrimaryBeam, Controller.Target);
+        GotoState('Shooting');
     }
-    PrimaryBeam.EndActor = Controller.Target;
-    PrimaryBeam.EffectEndTime = Level.TimeSeconds + 2.5;
-    GotoState('Shooting');
+    else if ( Controller.LineOfSightTo(Controller.Target) ) {
+        SpawnPrimaryBeam();
+        PrimaryBeam.EndActor = Controller.Target;
+        PrimaryBeam.EffectEndTime = Level.TimeSeconds + MaxDischargeTime;
+        GotoState('Shooting');
+    }
 }
 
 function SpawnTwoShots()
@@ -261,7 +303,7 @@ function SpawnTwoShots()
     warn("TeslaHuks.SpawnTwoShots() must not be called");
 }
 
-simulated function Tick( float Delta )
+simulated function Tick(float dt)
 {
     if ( Role < ROLE_Authority ) {
         if ( bDecapitated && Health > 0 && DecapitationSparks == none ) {
@@ -269,32 +311,36 @@ simulated function Tick( float Delta )
         }
     }
 
-    Super(KFMonster).Tick(Delta);
+    super.Tick(dt);
 
     if ( Role == ROLE_Authority ) {
         if ( Energy < EnergyMax )
-            Energy += EnergyRestoreRate * Delta;
+            Energy += EnergyRestoreRate * dt;
 
-        if ( Energy > 50 && NextHealAttemptTime < Level.TimeSeconds ) {
+        if ( Energy > 50 && Level.TimeSeconds > NextHealAttemptTime ) {
             NextHealAttemptTime = Level.TimeSeconds + 3.0;
             TryHealing();
         }
     }
 }
 
-function TryHealing()
+function bool TryHealing()
 {
     local Controller C;
     local KFMonsterController MyMC;
     local KFMonster BestPatient, Candidate;
+    local int MaxHealing;
     local bool bAnyPatients;
+
+    if ( Energy < 25 )
+        return false;
 
     MyMC = KFMonsterController(Controller);
     if ( MyMC == none )
-        return; // just in case
+        return false; // just in case
 
-    if ( MyMC.Enemy != none && VSizeSquared(MyMC.Enemy.Location - Location) < MaxPrimaryBeamRangeSquared )
-        return; // no healing when need to fight
+    if ( MyMC.Enemy != none && VSizeSquared(MyMC.Enemy.Location - Location) < MaxPrimaryBeamRange )
+        return false; // no healing when need to fight
 
     for ( C=Level.ControllerList; C!=none; C=C.NextController ) {
         Candidate = KFMonster(C.Pawn);
@@ -302,28 +348,30 @@ function TryHealing()
                 && (Candidate.IsA('TeslaHusk') || Candidate.IsA('ZombieFleshpound') || Candidate.IsA('FemaleFP')) )
         {
             bAnyPatients = true;
-            if ( (BestPatient == none || Candidate.Health/Candidate.HealthMax < BestPatient.Health/BestPatient.HealthMax )
-                    && VSizeSquared(C.Pawn.Location - Location) < MaxPrimaryBeamRangeSquared )
+            if ( Candidate.HealthMax - Candidate.Health > MaxHealing
+                    && VSizeSquared(Candidate.Location - Location) < MaxHealingRangeSquared
+                    && FastTrace(Candidate.Location, Location) )
                 BestPatient = Candidate;
+                MaxHealing = Candidate.HealthMax - Candidate.Health;
         }
     }
 
-    if ( !bAnyPatients )
+    if ( !bAnyPatients ) {
         NextHealAttemptTime = Level.TimeSeconds + 10.0; // no other husks on the map - so no need to do searching so often
+    }
     else if ( BestPatient != none ) {
-        if ( BestPatient.Health < BestPatient.HealthMax * 0.99 ) {
-            MyMC.Target = BestPatient;
-            MyMC.ChangeEnemy(BestPatient, MyMC.CanSee(BestPatient));
-            MyMC.GotoState('RangedAttack');
-
-            LastHealTime = Level.TimeSeconds + 3.0; // do not heal until beam is spawned
+        if ( BestPatient.Health < BestPatient.HealthMax * 0.95 ) {
+            IntermediateTarget = BestPatient;
             GotoState('Healing');
+            return true;
         }
         else
             NextHealAttemptTime = Level.TimeSeconds + 1.0; // if there are other Tesla Husks nearby, then check their health each second
     }
-    else
+    else {
         NextHealAttemptTime = Level.TimeSeconds + 3.0; // there are other Tesla Husks on the map, but not too close
+    }
+    return false;
 }
 
 function Died(Controller Killer, class<DamageType> damageType, vector HitLocation)
@@ -371,15 +419,13 @@ function RemoveHead()
     // No more raspy breathin'...cuz he has no throat or mouth :S
     AmbientSound = MiscSound;
 
-
     // super.TakeDamage(LastDamageAmount) isn't called yet, so set self-destruct sequence only if
     // zed can survive the hit
-    if( Health > LastDamageAmount && Energy > 25 ) {
+    if( Health > LastDamageAmount ) {
         SpawnDecapitationEffects();
         BleedOutTime = Level.TimeSeconds +  BleedOutDuration;
         GotoState('SelfDestruct');
     }
-
 
     PlaySound(DecapitationSound, SLOT_Misc,1.30,true,525);
 }
@@ -420,9 +466,14 @@ simulated function int DoAnimAction( name AnimName )
     return super.DoAnimAction(AnimName);
 }
 
+function bool HasRangedAttack()
+{
+    return true;
+}
+
 function float RangedAttackTime()
 {
-    return 5.0;
+    return MaxDischargeTime + 1.0;
 }
 
 function bool IsHeadShot(vector HitLoc, vector ray, float AdditionalScale)
@@ -432,22 +483,28 @@ function bool IsHeadShot(vector HitLoc, vector ray, float AdditionalScale)
 
 state Healing
 {
-    ignores TryHealing;
-
     function BeginState()
     {
-        //log("Entering Healing State @ " $ Level.TimeSeconds, 'TeslaHusk');
+        local KFMonsterController MyMC;
 
-        LastHealTime = Level.TimeSeconds + 3.0; // do not heal until beam is spawned
+        // log(">>> Healing @ " $ Level.TimeSeconds, 'TeslaHusk');
+        MyMC = KFMonsterController(Controller);
+        if ( MyMC == none || IntermediateTarget == none )
+            return;
+
+        MyMC.Target = IntermediateTarget;
+        MyMC.ChangeEnemy(IntermediateTarget, MyMC.CanSee(IntermediateTarget));
+        MyMC.GotoState('RangedAttack');
+        NextHealTime = Level.TimeSeconds + 3.0; // do not heal until beam is spawned
     }
 
     function EndState()
     {
+        local KFMonsterController MyMC;
         local name SeqName;
         local float AnimFrame, AnimRate;
 
-        //log("Exiting Healing State @ " $ Level.TimeSeconds, 'TeslaHusk');
-
+        // log("<<< Healing @ " $ Level.TimeSeconds, 'TeslaHusk');
         NextHealAttemptTime = Level.TimeSeconds + 5.0;
         FreePrimaryBeam();
 
@@ -456,17 +513,72 @@ state Healing
         if ( SeqName == 'ShootBurns' && AnimFrame < 120 )
             SetAnimAction('ShootBurnsEnd'); // faked anim
 
-        Controller.Enemy = none;
-        KFMonsterController(Controller).FindNewEnemy();
+        MyMC = KFMonsterController(Controller);
+        if ( MyMC != none ) {
+            MyMC.Enemy = none;
+            MyMC.FindNewEnemy();
+            MyMC.WhatToDoNext(200);
+        }
+    }
+
+    function RangedAttack(Actor A)
+    {
+        if ( bShotAnim || A != IntermediateTarget )
+            return;
+
+        bShotAnim = true;
+        SetAnimAction('ShootBurns');
+        Controller.bPreparingMove = true;
+        Acceleration = vect(0,0,0);
+    }
+
+    function bool TryHealing()
+    {
+        return false;
     }
 
     function n_SpawnBeam()
     {
+        if ( Controller == none || !Controller.LineOfSightTo(IntermediateTarget) ) {
+            GotoState('');
+            return;
+        }
+
         SpawnPrimaryBeam();
-        if ( Controller != none )
-            PrimaryBeam.EndActor = Controller.Target;
-        PrimaryBeam.EffectEndTime = Level.TimeSeconds + 2.5;
-        LastHealTime = Level.TimeSeconds - 1.0; // start healing
+        PrimaryBeam.EndActor = IntermediateTarget;
+        PrimaryBeam.EffectEndTime = Level.TimeSeconds + 1.0 / HealRate;
+        Heal(KFMonster(Controller.Target), DischargeRate);
+    }
+
+    function Heal(KFMonster Patient, float dt)
+    {
+        local int HealthToAdd, HeadHealthToAdd;
+        local int HeadHealthMax;
+
+        if ( Patient == none || Patient.Health <= 0 || Patient.bDecapitated || Patient.Health >= Patient.HealthMax
+                || Energy <= 0 )
+        {
+            GotoState('');
+            return;
+        }
+
+        HealthToAdd = min(ceil(Patient.HealthMax * HealRate * dt), Patient.HealthMax - Patient.Health);
+        HeadHealthMax = Patient.default.HeadHealth * Patient.DifficultyHeadHealthModifer() * Patient.NumPlayersHeadHealthModifer();
+        HeadHealthToAdd = min(ceil(HeadHealthMax * HealHeadRate * dt), HeadHealthMax - Patient.HeadHealth);
+
+        if ( HealthToAdd * HealEnergyDrain > Energy ) {
+            HealthToAdd = Energy / HealEnergyDrain;
+            HeadHealthToAdd = min(HeadHealthToAdd, Energy / HealEnergyDrain);
+            Energy = 0;
+        }
+        else {
+            Energy -= HealthToAdd * HealEnergyDrain;
+        }
+        Patient.HeadHealth += HeadHealthToAdd;
+        Patient.Health += HealthToAdd;
+
+        LastHealTime = Level.TimeSeconds;
+        NextHealTime = Level.TimeSeconds + DischargeRate;
     }
 
     function bool FlipOver()
@@ -478,37 +590,16 @@ state Healing
         return false;
     }
 
-    function Tick(float DeltaTime)
+    function Tick(float dt)
     {
-        local KFMonster Patient;
-        local int HealthToAdd, HeadHealthToAdd;
-        local int HeadHealthMax;
+        super.Tick(dt);
 
-        super.Tick(DeltaTime);
-
-        if ( Level.TimeSeconds >= LastHealTime+0.25 ) {
-            if ( PrimaryBeam == none || Energy <= 0 || Level.TimeSeconds > PrimaryBeam.EffectEndTime ) {
+        if ( Level.TimeSeconds > NextHealTime ) {
+            if ( PrimaryBeam == none || Level.TimeSeconds > PrimaryBeam.EffectEndTime ) {
                 GotoState('');
                 return;
             }
-
-            NextHealAttemptTime = Level.TimeSeconds + 3.0;
-            Patient = KFMonster(PrimaryBeam.EndActor);
-            if ( Patient == none || Patient.Health <= 0 || Patient.Health >= Patient.HealthMax )
-                GotoState('');
-            else {
-                HealthToAdd = min(Patient.HealthMax*HealRate*(Level.TimeSeconds-LastHealTime), Patient.HealthMax - Patient.Health);
-                if ( HealthToAdd*HealEnergyDrain > Energy )
-                    HealthToAdd = Energy / HealEnergyDrain;
-                if ( !Patient.bDecapitated && Patient.HeadHealth > 0 ) {
-                    HeadHealthMax = Patient.default.HeadHealth * Patient.DifficultyHeadHealthModifer() * Patient.NumPlayersHeadHealthModifer();
-                    HeadHealthToAdd = min(HeadHealthMax*HealRate*2.0*(Level.TimeSeconds-LastHealTime), HeadHealthMax - Patient.HeadHealth);
-                    Patient.HeadHealth += HeadHealthToAdd;
-                }
-                Patient.Health += HealthToAdd;
-                Energy -= HealthToAdd*HealEnergyDrain;
-                LastHealTime = Level.TimeSeconds;
-            }
+            Heal(KFMonster(PrimaryBeam.EndActor), Level.TimeSeconds - LastHealTime);
         }
     }
 }
@@ -517,11 +608,11 @@ state Healing
 // todo:  make custom controller, moving states there
 state Shooting
 {
-    ignores TryHealing;
+    ignores RangedAttack;
 
     function BeginState()
     {
-        //log("Entering Shooting State @ " $ Level.TimeSeconds, 'TeslaHusk');
+        //log(">>> Shooting @ " $ Level.TimeSeconds, 'TeslaHusk');
 
         if ( PrimaryBeam == none ) {
             SpawnPrimaryBeam();
@@ -534,15 +625,15 @@ state Shooting
         Discharge(DischargeRate);
     }
 
-
     function EndState()
     {
         local name SeqName;
         local float AnimFrame, AnimRate;
 
-        //log("Exiting Shooting State @ " $ Level.TimeSeconds, 'TeslaHusk');
+        //log("<<< Shooting @ " $ Level.TimeSeconds, 'TeslaHusk');
 
         FreePrimaryBeam();
+        NextChainRebuildTime = 0;
 
         // end shooting animation
         GetAnimParams(0, SeqName, AnimFrame, AnimRate);
@@ -550,11 +641,16 @@ state Shooting
             SetAnimAction('ShootBurnsEnd'); // faked anim
     }
 
+    function bool TryHealing()
+    {
+        return false;
+    }
+
     function BuildChain()
     {
         local int ChainsRemaining;
 
-        ChainRebuildTimer = default.ChainRebuildTimer;
+        NextChainRebuildTime = Level.TimeSeconds + 1;
         ChainsRemaining = MaxChainActors;
         if ( PrimaryBeam != none && KFDoorMover(PrimaryBeam.EndActor) == none )
             SpawnChildBeams(PrimaryBeam, 1, ChainsRemaining);
@@ -563,7 +659,6 @@ state Shooting
     function SpawnChildBeams(TeslaBeam MasterBeam, byte level, out int ChainsRemaining)
     {
         local Pawn P;
-        local TeslaBeam ChildBeam;
         local int i;
 
         if ( MasterBeam == none || level > MaxChainLevel || ChainsRemaining <= 0 )
@@ -583,17 +678,10 @@ state Shooting
             {
                 i = MasterBeam.ChildIndex(P);
                 if ( i != -1 ) {
-                    ChildBeam = MasterBeam.ChildBeams[i];
-                    ChildBeam.EffectEndTime = PrimaryBeam.EffectEndTime;
+                    MasterBeam.ChildBeams[i].EffectEndTime = MasterBeam.EffectEndTime;
                 }
                 else {
-                    ChildBeam = SpawnTeslaBeam();
-                    if ( ChildBeam != none ) {
-                        ChildBeam.StartActor = MasterBeam.EndActor;
-                        ChildBeam.EndActor = P;
-                        ChildBeam.EffectEndTime = PrimaryBeam.EffectEndTime;
-                        MasterBeam.ChildBeams[MasterBeam.ChildBeams.length] = ChildBeam;
-                    }
+                    SpawnChildBeam(MasterBeam, P);
                 }
                 if ( --ChainsRemaining <= 0 )
                     return;
@@ -662,14 +750,26 @@ state Shooting
         }
     }
 
-
-    function Discharge(float DeltaTime)
+    function Discharge(float dt)
     {
+        local int i;
+
         LastDischargeTime = Level.TimeSeconds;
         DischargedActors.length = 0;
-        ChainDamage(PrimaryBeam, DischargeDamage*DeltaTime, 0);
-        if (Energy <= 0)
+        ChainDamage(PrimaryBeam, DischargeDamage*dt, 0);
+        if ( Energy <= 0 ) {
             GotoState(''); // out of energy - stop shooting
+            return;
+        }
+        if ( Controller != none && KFPawn(Controller.Enemy) != none ) {
+            // stop shooting zeds if there are no players around
+            for ( i = 0; i < DischargedActors.length; ++i ) {
+                if ( KFPawn(DischargedActors[i].Victim) != none )
+                    return;
+            }
+            // if reached here - no players got hit
+            GotoState('');
+        }
     }
 
     function bool FlipOver()
@@ -682,18 +782,16 @@ state Shooting
     }
 
 
-    function Tick(float DeltaTime)
+    function Tick(float dt)
     {
-        super.Tick(DeltaTime);
+        super.Tick(dt);
 
-        //log("Shooting.Tick @ " $ Level.TimeSeconds $ ":" @"Energy="$Energy @"PrimaryBeam="$PrimaryBeam, 'TeslaHusk');
-
-        ChainRebuildTimer -= DeltaTime;
-        if ( Energy <= 0 || PrimaryBeam == none || PrimaryBeam.EndActor == none || Level.TimeSeconds > PrimaryBeam.EffectEndTime ) {
+        if ( Energy <= 0 || PrimaryBeam == none || PrimaryBeam.EndActor == none
+                || Level.TimeSeconds > PrimaryBeam.EffectEndTime ) {
             GotoState('');
         }
-        else if ( LastDischargeTime + DischargeRate <= Level.TimeSeconds ) {
-            if ( ChainRebuildTimer <= 0 )
+        else if ( Level.TimeSeconds > LastDischargeTime + DischargeRate ) {
+            if ( Level.TimeSeconds > NextChainRebuildTime )
                 BuildChain();
 
             Discharge(Level.TimeSeconds - LastDischargeTime); // damage chained actors
@@ -715,8 +813,13 @@ state SelfDestruct
             AttachToBone(MyNade, RootBone);
             MyNade.SetTimer(3.0, false);
             MyNade.bTimerSet = true;
-            MyNade.Damage = max(30, Energy * 0.65);
+            MyNade.Damage = max(EmpDamageMin, Energy * EmpDamagePerEnergy);
+            MyNade.Instigator = self;
+            MyNade.InstigatorController = Controller;
             MyNade.Killer = LastDamagedBy;
+            if ( LastDamagedBy != none ) {
+                MyNade.KillerController = LastDamagedBy.Controller;
+            }
         }
         else {
             // wtf?
@@ -734,7 +837,9 @@ state SelfDestruct
     // takes only 25% of damage
     function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector Momentum, class<DamageType> damageType, optional int HitIndex)
     {
-        global.TakeDamage(Damage*0.25,instigatedBy,hitlocation,momentum,damageType,HitIndex);
+        if ( InstigatedBy != self )
+            Damage *= 0.25;
+        global.TakeDamage(Damage,instigatedBy,hitlocation,momentum,damageType,HitIndex);
     }
 }
 
@@ -775,7 +880,7 @@ defaultproperties
     MenuName="Tesla Husk"
 
     WaterSpeed=120 // 102
-    GroundSpeed=140 // 115
+    GroundSpeed=150 // 115
 
     HeadOffset=(X=-5.0,Y=-2.0)
     OnlineHeadshotOffset=(X=22.000000,Z=50.000000)
@@ -790,27 +895,31 @@ defaultproperties
     ScoringValue=25 // Husk=17
     BurnDamageScale=1.0 // no fire damage resistance
 
+    bMeleeFighter=false
+    MaxHealingRange=500  // 10m
     MaxPrimaryBeamRange=300 // 6m
     MaxChildBeamRange=150 // 3m
-    // 20% range increase for chained zed. E.g. pawn must get 300*1.2=360uu
+    // 35% range increase for chained zed. E.g. pawn must get 300*1.35=405uu
     // away from Tesla Husk to get himself unchainsed
     ChainedBeamRangeExtension=1.35
 
     BeamClass=class'ScrnZedPack.TeslaBeam'
     Energy=100
     EnergyMax=100
-    EnergyRestoreRate=20
-    ProjectileFireInterval=5.0
+    EnergyRestoreRate=10
+    ProjectileFireInterval=8.0
     BleedOutDuration=5.0
 
-    ChainRebuildTimer=1.0
     DischargeRate=0.25
     DischargeDamage=10.00 // 20
+    MaxDischargeTime=2.5
     ChainDamageMult=0.850 // 0.70
     MaxChainLevel=5
     MaxChainActors=20
-    MyDamageType=class'ScrnZedPack.DamTypeTesla'
+    MyDamageType=class'ScrnZedPack.DamTypeTeslaBeam'
     HealRate=0.25
-    HealEnergyDrain=0.10
-
+    HealHeadRate=0.50
+    HealEnergyDrain=0.05
+    EmpDamagePerEnergy=0.65
+    EmpDamageMin=30
 }

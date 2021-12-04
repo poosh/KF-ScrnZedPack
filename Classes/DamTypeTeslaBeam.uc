@@ -1,0 +1,1 @@
+class DamTypeTeslaBeam extends DamTypeTesla;

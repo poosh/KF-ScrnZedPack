@@ -181,6 +181,13 @@ function bool ShouldKnockDownFromDamage()
     return true;
 }
 
+function CheckBuddySquads()
+{
+    if ( bEndGameBoss && KFGameType(Level.Game).FinalSquadNum <= SyringeCount ) {
+       KFGameType(Level.Game).AddBossBuddySquad();
+    }
+}
+
 function GotoNextState()
 {
     if ( NeedHealing() ) {
@@ -292,6 +299,12 @@ state KnockDown // Knocked
 
 State Escaping
 {
+    function BeginState()
+    {
+        super.BeginState();
+        CheckBuddySquads();
+    }
+
     function bool ShouldKnockDownFromDamage()
     {
         return false;

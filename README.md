@@ -2,6 +2,12 @@
 ScrN modification of custom monsters, adjusting game balance and bug fixes.
 
 # Version History
+### v9.69.09 - FINAL
+- Fixed an issue where **Tesla Husk** EMP explosion did too little or no damage to players
+- Fixed Tesla's healing ability
+- Sui/HoE: Fixed Tesla's ability to use zeds in-between to build an electrical chain to players
+
+
 ### v9.69.07
 - **HardPat** gets 50% damage resistance during the healing process on HoE
 - HardPat cannot be knocked down while shooting the first rocket on Suicidal/HoE

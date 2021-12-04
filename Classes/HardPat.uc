@@ -236,12 +236,7 @@ Begin:
     if ( Health > 0 ) {
         CloakBoss();
         PlaySound(SaveMeSound, SLOT_Misc, 2.0,,500.0);
-
-        if ( KFGameType(Level.Game).FinalSquadNum == SyringeCount )
-        {
-           KFGameType(Level.Game).AddBossBuddySquad();
-        }
-
+        CheckBuddySquads();
         GotoState('Escaping');
     }
 }
