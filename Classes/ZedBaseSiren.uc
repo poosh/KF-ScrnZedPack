@@ -165,6 +165,30 @@ function HurtRadius(float DamageAmount, float DamageRadius, class<DamageType> Da
 }
 
 
+// DEAD sirens can NOT spawn scream emitter 
+simulated function PlayDying(class<DamageType> DamageType, vector HitLoc)
+{
+    super.PlayDying(DamageType, HitLoc);
+
+    // yea, stop all animations on dead zed
+    StopAnimating();
+}
+
+
+state ZombieDying
+{
+ignores AnimEnd, Trigger, Bump, HitWall, HeadVolumeChange, PhysicsVolumeChange, Falling, BreathTimer, Died, RangedAttack;
+
+    simulated function BeginState()
+    {   
+        // yea, stop all animations on dead zed
+        StopAnimating();
+
+        super.BeginState();
+    }
+}
+
+
 defaultproperties
 {
     ControllerClass=class'ZedControllerSiren'
