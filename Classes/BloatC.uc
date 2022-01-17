@@ -7,28 +7,28 @@ class BloatC extends ZedBaseBloat;
 
 function PlayDyingSound()
 {
-	if ( Level.NetMode!=NM_Client )
-	{
-		if ( bGibbed )
-		{
-			PlaySound(sound'KF_EnemiesFinalSnd_Circus.Bloat_DeathPop', SLOT_Pain,2.0,true,525);
-			return;
-		}
+    if ( Level.NetMode!=NM_Client )
+    {
+        if ( bGibbed )
+        {
+            PlaySound(sound'KF_EnemiesFinalSnd_Circus.Bloat_DeathPop', SLOT_Pain,2.0,true,525);
+            return;
+        }
 
-		if ( bDecapitated )
-		{
-			PlaySound(HeadlessDeathSound, SLOT_Pain,1.30,true,525);
-		}
-		else
-		{
-			PlaySound(sound'KF_EnemiesFinalSnd_Circus.Bloat_DeathPop', SLOT_Pain,2.0,true,525);
-		}
-	}
+        if ( bDecapitated )
+        {
+            PlaySound(HeadlessDeathSound, SLOT_Pain,1.30,true,525);
+        }
+        else
+        {
+            PlaySound(sound'KF_EnemiesFinalSnd_Circus.Bloat_DeathPop', SLOT_Pain,2.0,true,525);
+        }
+    }
 }
 
 static simulated function PreCacheMaterials(LevelInfo myLevel)
 {
-	myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_CIRCUS_T.bloat_CIRCUS.bloat_clown_cmb');
+    myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_CIRCUS_T.bloat_CIRCUS.bloat_clown_cmb');
 }
 
 defaultproperties

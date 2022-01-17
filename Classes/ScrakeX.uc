@@ -17,10 +17,10 @@ simulated function UpdateExhaustEmitter()
 
 static simulated function PreCacheMaterials(LevelInfo myLevel)
 {//should be derived and used.
-	myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_XMAS_T.Scrakefrost_cmb');
-	myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_T.scrake_env_cmb');
-	myLevel.AddPrecacheMaterial(Texture'KF_Specimens_Trip_XMAS_T.scrake_frost');
-	myLevel.AddPrecacheMaterial(Texture'KF_Specimens_Trip_XMAS_T.scrake_frost_opacity');
+    myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_XMAS_T.Scrakefrost_cmb');
+    myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_T.scrake_env_cmb');
+    myLevel.AddPrecacheMaterial(Texture'KF_Specimens_Trip_XMAS_T.scrake_frost');
+    myLevel.AddPrecacheMaterial(Texture'KF_Specimens_Trip_XMAS_T.scrake_frost_opacity');
 }
 
 defaultproperties

@@ -7,30 +7,30 @@ class BloatX extends ZedBaseBloat;
 
 function PlayDyingSound()
 {
-	if ( Level.NetMode!=NM_Client )
-	{
-		if ( bGibbed )
-		{
-			PlaySound(sound'KF_EnemiesFinalSnd_Xmas.Bloat_DeathPop', SLOT_Pain,2.0,true,525);
-			return;
-		}
+    if ( Level.NetMode!=NM_Client )
+    {
+        if ( bGibbed )
+        {
+            PlaySound(sound'KF_EnemiesFinalSnd_Xmas.Bloat_DeathPop', SLOT_Pain,2.0,true,525);
+            return;
+        }
 
-		if ( bDecapitated )
-		{
-			PlaySound(HeadlessDeathSound, SLOT_Pain,1.30,true,525);
-		}
-		else
-		{
-			PlaySound(sound'KF_EnemiesFinalSnd_Xmas.Bloat_DeathPop', SLOT_Pain,2.0,true,525);
-		}
-	}
+        if ( bDecapitated )
+        {
+            PlaySound(HeadlessDeathSound, SLOT_Pain,1.30,true,525);
+        }
+        else
+        {
+            PlaySound(sound'KF_EnemiesFinalSnd_Xmas.Bloat_DeathPop', SLOT_Pain,2.0,true,525);
+        }
+    }
 }
 
 static simulated function PreCacheMaterials(LevelInfo myLevel)
 {
-	myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_XMAS_T.BloatSanta.BloatSanta_cmb');
-	myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_XMAS_T.BloatSanta_env_cmb');
-	myLevel.AddPrecacheMaterial(Texture'KF_Specimens_Trip_XMAS_T.Bloat_Santa');
+    myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_XMAS_T.BloatSanta.BloatSanta_cmb');
+    myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_XMAS_T.BloatSanta_env_cmb');
+    myLevel.AddPrecacheMaterial(Texture'KF_Specimens_Trip_XMAS_T.Bloat_Santa');
 }
 
 defaultproperties

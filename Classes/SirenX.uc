@@ -7,9 +7,9 @@ class SirenX extends ZedBaseSiren;
 
 static simulated function PreCacheMaterials(LevelInfo myLevel)
 {//should be derived and used.
-	myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_XMAS_T.caroler_cmb');
-	myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_XMAS_T.caroler_env_cmb');
-	myLevel.AddPrecacheMaterial(Texture'KF_Specimens_Trip_XMAS_T.caroler_diffuse');
+    myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_XMAS_T.caroler_cmb');
+    myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_XMAS_T.caroler_env_cmb');
+    myLevel.AddPrecacheMaterial(Texture'KF_Specimens_Trip_XMAS_T.caroler_diffuse');
 }
 
 defaultproperties

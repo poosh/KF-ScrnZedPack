@@ -11,39 +11,39 @@ simulated function PostBeginPlay()
 {
     Super.PostBeginPlay();
 
-  	Skins[0] = ClotSkins[Rand(5)];
+    Skins[0] = ClotSkins[Rand(5)];
 }
 
 simulated function SpawnSeveredGiblet( class<SeveredAppendage> GibClass, Vector Location, Rotator Rotation, float GibPerterbation, rotator SpawnRotation )
 {
-	local SeveredAppendage Giblet;
-	local Vector Direction, Dummy;
+    local SeveredAppendage Giblet;
+    local Vector Direction, Dummy;
 
-	if( (GibClass == None) || class'GameInfo'.static.UseLowGore() )
-		return;
+    if( (GibClass == None) || class'GameInfo'.static.UseLowGore() )
+        return;
 
-	Instigator = self;
-	Giblet = Spawn( GibClass,,, Location, SpawnRotation );
-	if( Giblet == None )
-		return;
-	Giblet.SpawnTrail();
+    Instigator = self;
+    Giblet = Spawn( GibClass,,, Location, SpawnRotation );
+    if( Giblet == None )
+        return;
+    Giblet.SpawnTrail();
 
-	GibPerterbation *= 32768.0;
-	Rotation.Pitch += ( FRand() * 2.0 * GibPerterbation ) - GibPerterbation;
-	Rotation.Yaw += ( FRand() * 2.0 * GibPerterbation ) - GibPerterbation;
-	Rotation.Roll += ( FRand() * 2.0 * GibPerterbation ) - GibPerterbation;
+    GibPerterbation *= 32768.0;
+    Rotation.Pitch += ( FRand() * 2.0 * GibPerterbation ) - GibPerterbation;
+    Rotation.Yaw += ( FRand() * 2.0 * GibPerterbation ) - GibPerterbation;
+    Rotation.Roll += ( FRand() * 2.0 * GibPerterbation ) - GibPerterbation;
 
-	GetAxes( Rotation, Dummy, Dummy, Direction );
+    GetAxes( Rotation, Dummy, Dummy, Direction );
 
-	Giblet.Velocity = Velocity + Normal(Direction) * (Giblet.MaxSpeed + (Giblet.MaxSpeed/2) * FRand());
+    Giblet.Velocity = Velocity + Normal(Direction) * (Giblet.MaxSpeed + (Giblet.MaxSpeed/2) * FRand());
 
-	// Give a little upward motion to the decapitated head
-	if( class<SeveredHead>(GibClass) != none )
-	{
-		Giblet.Skins[0] = Texture'kf_fx_trip_t.Gore.KF_Gore_Limbs_diff';
-		Giblet.Skins[1] = Skins[0];
-		Giblet.Velocity.Z += 50;
-	}
+    // Give a little upward motion to the decapitated head
+    if( class<SeveredHead>(GibClass) != none )
+    {
+        Giblet.Skins[0] = Texture'kf_fx_trip_t.Gore.KF_Gore_Limbs_diff';
+        Giblet.Skins[1] = Skins[0];
+        Giblet.Velocity.Z += 50;
+    }
 
 }
 
@@ -51,7 +51,7 @@ simulated function SetOverlayMaterial( Material mat, float time, bool bOverride 
 {
     // temporary fix for halloween zed to suppress the blood overlay so we can have great variation
     if(mat != Material'Effects_Tex.PlayerDeathOverlay')
-	{
+    {
         Super.SetOverlayMaterial(mat,time,bOverride);
     }
 }

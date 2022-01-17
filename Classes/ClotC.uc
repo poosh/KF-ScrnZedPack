@@ -8,8 +8,8 @@ class ClotC extends ZedBaseClot;
 
 static simulated function PreCacheMaterials(LevelInfo myLevel)
 {//should be derived and used.
-	myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_CIRCUS_T.clot_CIRCUS.clot_CIRCUS_CMB');
- }
+    myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_CIRCUS_T.clot_CIRCUS.clot_CIRCUS_CMB');
+}
 
 defaultproperties
 {

@@ -8,20 +8,20 @@ class FleshPoundX extends ZedBaseFleshPound;
 // changes colors on Device (notified in anim)
 simulated function DeviceGoRed()
 {
-	Skins[2]=Shader'KFCharacters.FPRedBloomShader';
+    Skins[2]=Shader'KFCharacters.FPRedBloomShader';
 }
 
 simulated function DeviceGoNormal()
 {
-	Skins[2] = Shader'KFCharacters.FPAmberBloomShader';
+    Skins[2] = Shader'KFCharacters.FPAmberBloomShader';
 }
 
 static simulated function PreCacheMaterials(LevelInfo myLevel)
 {//should be derived and used.
-	myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_XMAS_T.NutPound.NutPound_cmb');
-	myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_XMAS_T.NutPound_env_cmb');
-	myLevel.AddPrecacheMaterial(Texture'KF_Specimens_Trip_XMAS_T.NutPounder_T');
-	//myLevel.AddPrecacheMaterial(Material'KF_Specimens_Trip_XMAS_T.NutPound.nutpound_hair_fb');
+    myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_XMAS_T.NutPound.NutPound_cmb');
+    myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_XMAS_T.NutPound_env_cmb');
+    myLevel.AddPrecacheMaterial(Texture'KF_Specimens_Trip_XMAS_T.NutPounder_T');
+    //myLevel.AddPrecacheMaterial(Material'KF_Specimens_Trip_XMAS_T.NutPound.nutpound_hair_fb');
 }
 
 defaultproperties

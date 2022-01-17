@@ -8,10 +8,10 @@ class ClotX extends ZedBaseClot;
 
 static simulated function PreCacheMaterials(LevelInfo myLevel)
 {//should be derived and used.
-	myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_XMAS_T.Clot_Elf.Clot_Elf_cmb');
-	myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_XMAS_T.clot_elf_env_cmb');
-	myLevel.AddPrecacheMaterial(Texture'KF_Specimens_Trip_XMAS_T.clot_elf_diff');
-	//myLevel.AddPrecacheMaterial(Texture'KF_Specimens_Trip_T.clot_spec');
+    myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_XMAS_T.Clot_Elf.Clot_Elf_cmb');
+    myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_XMAS_T.clot_elf_env_cmb');
+    myLevel.AddPrecacheMaterial(Texture'KF_Specimens_Trip_XMAS_T.clot_elf_diff');
+    //myLevel.AddPrecacheMaterial(Texture'KF_Specimens_Trip_T.clot_spec');
 }
 
 defaultproperties

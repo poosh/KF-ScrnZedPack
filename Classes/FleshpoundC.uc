@@ -9,22 +9,22 @@ class FleshPoundC extends ZedBaseFleshPound;
 // changes colors on Device (notified in anim)
 simulated function DeviceGoRed()
 {
-	Skins[0]= Shader'KF_Specimens_Trip_CIRCUS_T.pound_CIRCUS.pound_CIRCUS_Red_Shdr';
-	Skins[1]= Shader'KFCharacters.FPRedBloomShader';
+    Skins[0]= Shader'KF_Specimens_Trip_CIRCUS_T.pound_CIRCUS.pound_CIRCUS_Red_Shdr';
+    Skins[1]= Shader'KFCharacters.FPRedBloomShader';
 }
 
 simulated function DeviceGoNormal()
 {
-	Skins[0] = Shader'KF_Specimens_Trip_CIRCUS_T.pound_CIRCUS.pound_CIRCUS_Amber_Shdr';
-	Skins[1] = Shader'KFCharacters.FPAmberBloomShader';
+    Skins[0] = Shader'KF_Specimens_Trip_CIRCUS_T.pound_CIRCUS.pound_CIRCUS_Amber_Shdr';
+    Skins[1] = Shader'KFCharacters.FPAmberBloomShader';
 }
 
 static simulated function PreCacheMaterials(LevelInfo myLevel)
 {//should be derived and used.
-	myLevel.AddPrecacheMaterial(Shader'KF_Specimens_Trip_CIRCUS_T.pound_CIRCUS.pound_CIRCUS_Amber_Shdr');
-	myLevel.AddPrecacheMaterial(Shader'KFCharacters.FPAmberBloomShader');
-	myLevel.AddPrecacheMaterial(Shader'KF_Specimens_Trip_CIRCUS_T.pound_CIRCUS.pound_CIRCUS_Red_Shdr');
-	myLevel.AddPrecacheMaterial(Shader'KFCharacters.FPRedBloomShader');
+    myLevel.AddPrecacheMaterial(Shader'KF_Specimens_Trip_CIRCUS_T.pound_CIRCUS.pound_CIRCUS_Amber_Shdr');
+    myLevel.AddPrecacheMaterial(Shader'KFCharacters.FPAmberBloomShader');
+    myLevel.AddPrecacheMaterial(Shader'KF_Specimens_Trip_CIRCUS_T.pound_CIRCUS.pound_CIRCUS_Red_Shdr');
+    myLevel.AddPrecacheMaterial(Shader'KFCharacters.FPRedBloomShader');
 }
 
 defaultproperties

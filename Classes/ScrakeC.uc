@@ -8,10 +8,10 @@ class ScrakeC extends ZedBaseScrake;
 
 static simulated function PreCacheMaterials(LevelInfo myLevel)
 {//should be derived and used.
-	myLevel.AddPrecacheMaterial(Shader'KF_Specimens_Trip_CIRCUS_T.scrake_CIRCUS.scrake_CIRCUS_shdr');
-	myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_CIRCUS_T.scrake_CIRCUS.scrake_CIRCUS_CMB');
-	myLevel.AddPrecacheMaterial(Shader'KF_Specimens_Trip_T.scrake_FB');
-	myLevel.AddPrecacheMaterial(TexPanner'KF_Specimens_Trip_T.scrake_saw_panner');
+    myLevel.AddPrecacheMaterial(Shader'KF_Specimens_Trip_CIRCUS_T.scrake_CIRCUS.scrake_CIRCUS_shdr');
+    myLevel.AddPrecacheMaterial(Combiner'KF_Specimens_Trip_CIRCUS_T.scrake_CIRCUS.scrake_CIRCUS_CMB');
+    myLevel.AddPrecacheMaterial(Shader'KF_Specimens_Trip_T.scrake_FB');
+    myLevel.AddPrecacheMaterial(TexPanner'KF_Specimens_Trip_T.scrake_saw_panner');
 }
 
 defaultproperties
