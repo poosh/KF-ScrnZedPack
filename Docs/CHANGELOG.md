@@ -2,6 +2,10 @@
 
 > [go back to README](../README.md 'go back to Table of Content')
 
+<!-- steam link shortcuts -->
+[NikC-]: http://steamcommunity.com/profiles/76561198044316328
+[Vrana]: https://steamcommunity.com/profiles/76561198021913290
+
 ## v9.69.09 - FINAL
 
 - Fixed an issue where **Tesla Husk** EMP explosion did too little or no damage to players
@@ -30,8 +34,8 @@
   - Radial Attack can be performed only on Hard+ difficulty
   - Damage delivery matches the animation: first, Pat attacks players on the left, then on the right.
     Players straightly in front and at the back are attacked twice.
-- Sui/HoE **HardPat**, when low on health, can perform Radial Attack against a single player (thanks *Vrana*)
-- Increased HardPat impale strike range from 0.9 to ~1.9m (thanks *#NikC-*)
+- Sui/HoE **HardPat**, when low on health, can perform Radial Attack against a single player (thanks [Vrana])
+- Increased HardPat impale strike range from 0.9 to ~1.9m (thanks [NikC-])
 
 ## v2.00
 
