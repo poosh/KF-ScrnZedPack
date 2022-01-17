@@ -37,7 +37,3 @@ For other ScrN based packages you can check this dependency diagram.
 * Download [ScrN Brutal KF Bundle].
 * Detailed info on the [ScrN Balance News Page](https://steamcommunity.com/groups/ScrNBalance/discussions/2/).
 * Any questions about this mod should be posted on [ScrN Balance Steam Group Forums](https://steamcommunity.com/groups/ScrNBalance/discussions/1/). Your feedback is more than welcome!
-
--------------------------------------------------------------------------------
-
-*Copyright (c) 2012-2021 PU Developing IK, Latvia, All Rights Reserved.*
