@@ -47,8 +47,11 @@ simulated function ToggleAuxCollision(bool newbCollision)
 
 function SpawnTwoShots()
 {
-    if ( Controller != none )
-        super.SpawnTwoShots();
+    // do not shoot if we are brainless, falling, dying or being moved by other husk
+    if (Controller == none || IsInState('ZombieDying') || IsInState('GettingOutOfTheWayOfShot') || Physics == PHYS_Falling)
+        return;
+
+    super.SpawnTwoShots();
 }
 
 function RangedAttack(Actor A)
