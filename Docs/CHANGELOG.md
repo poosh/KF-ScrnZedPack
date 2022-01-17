@@ -1,5 +1,7 @@
 # Changelog
 
+> [go back to README](../README.md 'go back to Table of Content')
+
 ## v9.69.09 - FINAL
 
 - Fixed an issue where **Tesla Husk** EMP explosion did too little or no damage to players
