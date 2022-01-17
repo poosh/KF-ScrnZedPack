@@ -737,10 +737,10 @@ defaultproperties
     Skins(0)=Combiner'ScrnZedPack_T.Brute.Brute_Final'
     Mass=600.000000
     RotationRate=(Yaw=45000,Roll=0)
-    DetachedArmClass=Class'ScrnZedPack.SeveredArmBrute'
-    DetachedLegClass=Class'ScrnZedPack.SeveredLegBrute'
-    DetachedHeadClass=Class'ScrnZedPack.SeveredHeadBrute'
-    ControllerClass=Class'ScrnZedPack.BruteController'
+    DetachedArmClass=Class'SeveredArmBrute'
+    DetachedLegClass=Class'SeveredLegBrute'
+    DetachedHeadClass=Class'SeveredHeadBrute'
+    ControllerClass=Class'BruteController'
 
     BlockMeleeDmgMul=0.500000
     HeadShotgunDmgMul=0.500000

@@ -314,7 +314,7 @@ State Escaping
 
 defaultproperties
 {
-    ControllerClass=class'ScrnZedPack.ZedControllerBoss'
+    ControllerClass=class'ZedControllerBoss'
     AvoidAreaClass=class'ZedAvoidArea'
     RadialRange=150
     RadialDamage=70

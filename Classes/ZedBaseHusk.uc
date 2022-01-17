@@ -106,7 +106,7 @@ function RemoveHead()
 
 defaultproperties
 {
-    ControllerClass=class'ScrnZedPack.ZedControllerHusk'
+    ControllerClass=class'ZedControllerHusk'
     MaxMeleeAttacks=2
     ShotsRemaining=1
     MaxFireRange=10000  // 200m

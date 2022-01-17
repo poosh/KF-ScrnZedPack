@@ -6,6 +6,7 @@ defaultproperties
      MaxSpritePPSTwo=22
      IdleSpritePPSOne=5
      IdleSpritePPSTwo=7
+
      Begin Object Class=SpriteEmitter Name=SpriteEmitter1
          FadeOut=True
          FadeIn=True
@@ -40,7 +41,7 @@ defaultproperties
          VelocityScale(1)=(RelativeTime=0.300000,RelativeVelocity=(X=0.200000,Y=1.000000,Z=1.000000))
          VelocityScale(2)=(RelativeTime=1.000000,RelativeVelocity=(Y=0.400000,Z=0.400000))
      End Object
-     Emitters(0)=SpriteEmitter'ScrnZedPack.FFPVentEmitter.SpriteEmitter1'
+     Emitters(0)=SpriteEmitter1
 
      Begin Object Class=SpriteEmitter Name=SpriteEmitter2
          FadeOut=True
@@ -78,7 +79,7 @@ defaultproperties
          VelocityScale(1)=(RelativeTime=0.400000,RelativeVelocity=(X=0.150000,Y=1.000000,Z=1.000000))
          VelocityScale(2)=(RelativeTime=1.000000,RelativeVelocity=(Y=0.400000,Z=0.400000))
      End Object
-     Emitters(1)=SpriteEmitter'ScrnZedPack.FFPVentEmitter.SpriteEmitter2'
+     Emitters(1)=SpriteEmitter2
 
      AutoDestroy=True
      bNetTemporary=True

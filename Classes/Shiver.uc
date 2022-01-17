@@ -461,7 +461,7 @@ static function PreCacheMaterials(LevelInfo myLevel)
 
 defaultproperties
 {
-    ControllerClass=class'ScrnZedPack.ZedController'
+    ControllerClass=class'ZedController'
     WalkAnim="ClotWalk"
     RunAnim="Run"
     MaxHeadTime=0.100000
@@ -496,9 +496,9 @@ defaultproperties
     SeveredArmAttachScale=0.800000
     SeveredLegAttachScale=0.800000
     SeveredHeadAttachScale=0.800000
-    DetachedArmClass=Class'ScrnZedPack.SeveredArmShiver'
-    DetachedLegClass=Class'ScrnZedPack.SeveredLegShiver'
-    DetachedHeadClass=Class'ScrnZedPack.SeveredHeadShiver'
+    DetachedArmClass=Class'SeveredArmShiver'
+    DetachedLegClass=Class'SeveredLegShiver'
+    DetachedHeadClass=Class'SeveredHeadShiver'
     HeadRadius=8.0
     HeadHeight=3.0
     HeadScale=1.300000

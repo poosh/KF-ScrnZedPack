@@ -52,6 +52,6 @@ State SawingLoop
 
 defaultproperties
 {
-    ControllerClass=class'ScrnZedPack.ZedControllerScrake'
+    ControllerClass=class'ZedControllerScrake'
     SawDamage=10
 }

@@ -869,10 +869,10 @@ defaultproperties
 
     Skins(0)=Shader'ScrnZedPack_T.TeslaHusk.TeslaHusk_SHADER'
 
-    DetachedArmClass=Class'ScrnZedPack.SeveredArmTeslaHusk'
-    DetachedSpecialArmClass=Class'ScrnZedPack.SeveredGunTeslaHusk'
-    DetachedLegClass=Class'ScrnZedPack.SeveredLegTeslaHusk'
-    DetachedHeadClass=Class'ScrnZedPack.SeveredHeadTeslaHusk'
+    DetachedArmClass=Class'SeveredArmTeslaHusk'
+    DetachedSpecialArmClass=Class'SeveredGunTeslaHusk'
+    DetachedLegClass=Class'SeveredLegTeslaHusk'
+    DetachedHeadClass=Class'SeveredHeadTeslaHusk'
 
     DecapitationSound=Sound'KF_FY_ZEDV2SND.Fire.WEP_ZEDV2_Secondary_Explode'
     MiscSound=Sound'KF_FY_ZEDV2SND.foley.WEP_ZEDV2_Projectile_Loop' // used as ambient sound after decapitation
@@ -903,7 +903,7 @@ defaultproperties
     // away from Tesla Husk to get himself unchainsed
     ChainedBeamRangeExtension=1.35
 
-    BeamClass=class'ScrnZedPack.TeslaBeam'
+    BeamClass=class'TeslaBeam'
     Energy=100
     EnergyMax=100
     EnergyRestoreRate=10
@@ -916,7 +916,7 @@ defaultproperties
     ChainDamageMult=0.850 // 0.70
     MaxChainLevel=5
     MaxChainActors=20
-    MyDamageType=class'ScrnZedPack.DamTypeTeslaBeam'
+    MyDamageType=class'DamTypeTeslaBeam'
     HealRate=0.25
     HealHeadRate=0.50
     HealEnergyDrain=0.05

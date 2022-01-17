@@ -152,8 +152,8 @@ defaultproperties
     bBlockNonZeroExtentTraces=false
     bBlockHitPointTraces=false
 
-    MyDamageType=class'ScrnZedPack.DamTypeEMP'
-    SelfDestructDamType=class'ScrnZedPack.DamTypeEMPSelfDestruct'
+    MyDamageType=class'DamTypeEMP'
+    SelfDestructDamType=class'DamTypeEMPSelfDestruct'
     ExplosionEffect=class'KFMod.ZEDMKIISecondaryProjectileExplosion'
 
     Speed=0

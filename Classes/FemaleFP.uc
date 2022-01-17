@@ -929,7 +929,7 @@ defaultproperties
      RageDamageMult=1.25     // does 25% more damage while raged
      RageMegaHitDamageMult=2.0  // RageDamageMult is NOT applied on the mega hit
      RageMegaHitCounter=10.0
-     VentEffectClass=Class'ScrnZedPack.FFPVentEmitter'
+     VentEffectClass=Class'FFPVentEmitter'
      RageDamageThreshold=300
      MeleeAnims(0)="Attack1"
      MeleeAnims(1)="Attack2"
@@ -964,8 +964,8 @@ defaultproperties
      ExtCollAttachBoneName="Collision_Attach"
      SeveredLegAttachScale=1.100000
      SeveredHeadAttachScale=1.200000
-     DetachedArmClass=Class'ScrnZedPack.SeveredArmFFP'
-     DetachedLegClass=Class'ScrnZedPack.SeveredLegFFP'
+     DetachedArmClass=Class'SeveredArmFFP'
+     DetachedLegClass=Class'SeveredLegFFP'
      PlayerCountHealthScale=0.300000
      OnlineHeadshotOffset=(X=25.0,Z=59.0)
      OnlineHeadshotOffsetCharging=(X=35.0,Z=50.0)
@@ -992,7 +992,7 @@ defaultproperties
      HeadHeight=2.500000
      HeadScale=1.300000
      MenuName="Female FleshPound"
-     ControllerClass=Class'ScrnZedPack.FFPController'
+     ControllerClass=Class'FFPController'
      MovementAnims(0)="WalkF"
      MovementAnims(1)="WalkB"
      MovementAnims(2)="WalkL"

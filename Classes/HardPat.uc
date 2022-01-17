@@ -668,7 +668,7 @@ Begin:
 
 defaultproperties
 {
-    ControllerClass=Class'ScrnZedPack.HardPatController'
+    ControllerClass=Class'HardPatController'
     LODBias=4.000000
     MenuName="Hard Pat"
     ScoringValue=1000
