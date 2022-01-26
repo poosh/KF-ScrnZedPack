@@ -12,6 +12,10 @@ simulated function PostBeginPlay()
 {
     super.PostBeginPlay();
 
+    // and why TWI removed this feature...
+    if (Controller != none)
+		MyAmmo = spawn(AmmunitionClass);
+
     MaxFireRangeSq = Square(MaxFireRange);
     MaxShotsRemaining = ShotsRemaining;
     ShotsRemaining = 1 + rand(MaxShotsRemaining);
@@ -66,18 +70,17 @@ function SpawnTwoShots()
     GetAxes(Rotation, X, Y, Z);
     FireStart = GetBoneCoords('Barrel').Origin;
     
-    // TWI sets `HuskFireProjClass` both in defaultproperties and in this function...
-    // let's be smart and set it only in defaultproperties to avoid code copy-cat
+    // back to roots, use MyAmmo variable
     if (!SavedFireProperties.bInitialized)
     {
-        SavedFireProperties.AmmoClass = class'SkaarjAmmo';
-        SavedFireProperties.ProjectileClass = HuskFireProjClass;
-        SavedFireProperties.WarnTargetPct = 1;
-        SavedFireProperties.MaxRange = 65535;
-        SavedFireProperties.bTossed = false;
-        SavedFireProperties.bTrySplash = true;
-        SavedFireProperties.bLeadTarget = true;
-        SavedFireProperties.bInstantHit = false;
+        SavedFireProperties.AmmoClass = MyAmmo.Class;
+        SavedFireProperties.ProjectileClass = MyAmmo.ProjectileClass;
+        SavedFireProperties.WarnTargetPct = MyAmmo.WarnTargetPct;
+        SavedFireProperties.MaxRange = MyAmmo.MaxRange;
+        SavedFireProperties.bTossed = MyAmmo.bTossed;
+        SavedFireProperties.bTrySplash = MyAmmo.bTrySplash;
+        SavedFireProperties.bLeadTarget = MyAmmo.bLeadTarget;
+        SavedFireProperties.bInstantHit = MyAmmo.bInstantHit;
         SavedFireProperties.bInitialized = true;
     }
 
@@ -99,7 +102,7 @@ function SpawnTwoShots()
     }
 
     // added projectile owner, maybe some one will use it
-    Spawn(HuskFireProjClass, self, ,FireStart, FireRotation);
+    Spawn(SavedFireProperties.ProjectileClass, self, ,FireStart, FireRotation);
 
     // Turn extra collision back on
     ToggleAuxCollision(true);
@@ -162,7 +165,7 @@ function RemoveHead()
 defaultproperties
 {
     ControllerClass=class'ZedControllerHusk'
-    HuskFireProjClass=class'KFChar.HuskFireProjectile'
+    AmmunitionClass=class'HuskAmmo'
     MaxMeleeAttacks=2
     ShotsRemaining=1
     MaxFireRange=10000  // 200m

@@ -9,7 +9,7 @@ class HuskH extends ZedBaseHusk;
 
 defaultproperties
 {
-    HuskFireProjClass=class'KFChar.HuskFireProjectile_HALLOWEEN'
+    AmmunitionClass=class'HuskAmmoH'
 
     MoanVoice=SoundGroup'KF_EnemiesFinalSnd_HALLOWEEN.Husk.Husk_Talk'
     MeleeAttackHitSound=SoundGroup'KF_EnemiesFinalSnd_HALLOWEEN.Bloat.Bloat_HitPlayer'

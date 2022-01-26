@@ -31,7 +31,7 @@ simulated function PostBeginPlay()
 
 defaultproperties
 {
-    HuskFireProjClass=class'HuskFireProjectileSE'
+    AmmunitionClass=class'HuskAmmoG'
 
     DetachedArmClass=class'SeveredArmHusk'
     DetachedSpecialArmClass=class'SeveredArmHuskGun'
