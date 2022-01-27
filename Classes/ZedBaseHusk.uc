@@ -13,8 +13,7 @@ simulated function PostBeginPlay()
     super.PostBeginPlay();
 
     // and why TWI removed this feature...
-    if (Controller != none)
-		MyAmmo = spawn(AmmunitionClass);
+    MyAmmo = spawn(AmmunitionClass);
 
     MaxFireRangeSq = Square(MaxFireRange);
     MaxShotsRemaining = ShotsRemaining;
