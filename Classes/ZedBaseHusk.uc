@@ -1,5 +1,5 @@
 class ZedBaseHusk extends ZombieHusk
-abstract;
+    abstract;
 
 var() int MaxMeleeAttacks;
 var() float MaxFireRange;
@@ -11,6 +11,9 @@ var transient int MaxShotsRemaining;
 simulated function PostBeginPlay()
 {
     super.PostBeginPlay();
+
+    // and why TWI removed this feature...
+    MyAmmo = spawn(AmmunitionClass);
 
     MaxFireRangeSq = Square(MaxFireRange);
     MaxShotsRemaining = ShotsRemaining;
@@ -45,11 +48,65 @@ simulated function ToggleAuxCollision(bool newbCollision)
         super.ToggleAuxCollision(newbCollision);
 }
 
+
+// let's edit original code to avoid copy-cats in every seasonal zed class
 function SpawnTwoShots()
 {
-    if ( Controller != none )
-        super.SpawnTwoShots();
+    local vector X,Y,Z, FireStart;
+    local rotator FireRotation;
+    local KFMonsterController KFMonstControl;
+
+    // do not shoot if we are brainless, falling, dying or being moved by other husk
+    if (Controller == none || IsInState('ZombieDying') || IsInState('GettingOutOfTheWayOfShot') || Physics == PHYS_Falling)
+        return;
+
+    if (KFDoorMover(Controller.Target) != None)
+    {
+        Controller.Target.TakeDamage(22, Self, Location, vect(0, 0, 0), class'DamTypeVomit');
+        return;
+    }
+
+    GetAxes(Rotation, X, Y, Z);
+    FireStart = GetBoneCoords('Barrel').Origin;
+    
+    // back to roots, use MyAmmo variable
+    if (!SavedFireProperties.bInitialized)
+    {
+        SavedFireProperties.AmmoClass = MyAmmo.Class;
+        SavedFireProperties.ProjectileClass = MyAmmo.ProjectileClass;
+        SavedFireProperties.WarnTargetPct = MyAmmo.WarnTargetPct;
+        SavedFireProperties.MaxRange = MyAmmo.MaxRange;
+        SavedFireProperties.bTossed = MyAmmo.bTossed;
+        SavedFireProperties.bTrySplash = MyAmmo.bTrySplash;
+        SavedFireProperties.bLeadTarget = MyAmmo.bLeadTarget;
+        SavedFireProperties.bInstantHit = MyAmmo.bInstantHit;
+        SavedFireProperties.bInitialized = true;
+    }
+
+    // Turn off extra collision before spawning vomit, otherwise spawn fails
+    ToggleAuxCollision(false);
+
+    FireRotation = Controller.AdjustAim(SavedFireProperties, FireStart, 600);
+
+    foreach DynamicActors(class'KFMonsterController', KFMonstControl)
+    {
+        // ignore zeds that the husk actually can't see, Joabyy
+        if (KFMonstControl == none || KFMonstControl == Controller || !LineOfSightTo(KFMonstControl))
+            continue;
+
+        if (PointDistToLine(KFMonstControl.Pawn.Location, vector(FireRotation), FireStart) < 75)
+        {
+            KFMonstControl.GetOutOfTheWayOfShot(vector(FireRotation),FireStart);
+        }
+    }
+
+    // added projectile owner, maybe some one will use it
+    Spawn(SavedFireProperties.ProjectileClass, self, ,FireStart, FireRotation);
+
+    // Turn extra collision back on
+    ToggleAuxCollision(true);
 }
+
 
 function RangedAttack(Actor A)
 {
@@ -107,6 +164,7 @@ function RemoveHead()
 defaultproperties
 {
     ControllerClass=class'ZedControllerHusk'
+    AmmunitionClass=class'HuskAmmo'
     MaxMeleeAttacks=2
     ShotsRemaining=1
     MaxFireRange=10000  // 200m

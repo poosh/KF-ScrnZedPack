@@ -98,8 +98,10 @@ simulated function SpawnTwoShots()
         HurtRadius(ScreamDamage, ScreamRadius, ScreamDamageType, ScreamForce, Location);
 }
 
+
 // fixed instigator in calling TakeDamage()
 // fixed pull effect
+// much faster itarator
 function HurtRadius(float DamageAmount, float DamageRadius, class<DamageType> DamageType, float Momentum,
         vector HitLocation )
 {
@@ -113,7 +115,15 @@ function HurtRadius(float DamageAmount, float DamageRadius, class<DamageType> Da
         return;
 
     bHurtEntry = true;
-    foreach VisibleCollidingActors( class 'Actor', Victim, DamageRadius, HitLocation ) {
+
+    // was VisibleCollidingActors
+    foreach CollidingActors(class'Actor', Victim, DamageRadius, HitLocation)
+    {
+        // some optimizations
+        // https://wiki.beyondunreal.com/Legacy:Code_Optimization#Optimize_iterator_use
+        if (Victim.bStatic || Victim.Physics == PHYS_None || !FastTrace(Victim.Location, Location))
+            continue; // skip this actor
+
         // don't let blast damage affect fluid - VisibleCollisingActors doesn't really work for them - jag
         // Or Karma actors in this case. Self inflicted Death due to flying chairs is uncool for a zombie of your stature.
         if ( Victim != self && !Victim.IsA('FluidSurfaceInfo') && !Victim.IsA('ExtendedZCollision') ) {
@@ -150,7 +160,32 @@ function HurtRadius(float DamageAmount, float DamageRadius, class<DamageType> Da
                     HitLocation);
         }
     }
+
     bHurtEntry = false;
+}
+
+
+// DEAD sirens can NOT spawn scream emitter 
+simulated function PlayDying(class<DamageType> DamageType, vector HitLoc)
+{
+    super.PlayDying(DamageType, HitLoc);
+
+    // yea, stop all animations on dead zed
+    StopAnimating();
+}
+
+
+state ZombieDying
+{
+ignores AnimEnd, Trigger, Bump, HitWall, HeadVolumeChange, PhysicsVolumeChange, Falling, BreathTimer, Died, RangedAttack;
+
+    simulated function BeginState()
+    {   
+        // yea, stop all animations on dead zed
+        StopAnimating();
+
+        super.BeginState();
+    }
 }
 
 
