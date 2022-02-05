@@ -94,7 +94,7 @@ function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector M
     if ( Health <= 0 ) {
         DeviceGoNormal();
     }
-    else if ( !bDecapitated && TwoSecondDamageTotal > RageDamageThreshold && !bChargingPlayer
+    else if ( !bDecapitated && TwoSecondDamageTotal > RageDamageThreshold && !bChargingPlayer && !bShotAnim
             && !bZapped && (!(bCrispified && bBurnified) || bFrustrated) )
     {
         StartCharging();

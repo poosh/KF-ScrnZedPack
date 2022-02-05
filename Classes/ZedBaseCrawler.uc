@@ -1,6 +1,8 @@
 class ZedBaseCrawler extends ZombieCrawler
 abstract;
 
+var transient float NextMeleeTime;
+
 simulated function PostBeginPlay()
 {
     CurrentDamType = ZombieDamType[0];
@@ -43,6 +45,19 @@ event Bump(actor Other)
         //After impact, there'll be no momentum for further bumps
         bPouncing=false;
     }
+}
+
+function RangedAttack(Actor A)
+{
+    if (bShotAnim || Physics == PHYS_Swimming || Level.TimeSeconds < NextMeleeTime || !CanAttack(A))
+        return;
+
+    bShotAnim = true;
+    SetAnimAction('Claw');
+    //PlaySound(sound'Claw2s', SLOT_None); KFTODO: Replace this
+    Controller.bPreparingMove = true;
+    Acceleration = vect(0,0,0);
+    NextMeleeTime = Level.TimeSeconds + 1.0;
 }
 
 

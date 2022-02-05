@@ -8,6 +8,9 @@ var(Sounds) sound SaveMeSound;
 
 var float EscapeShieldDamageMult;  // damage reduction while escaping
 var float HealingShieldDamageMultHoE;  // damage reduction while healing (HoE only)
+var float FlareDamageMult;  // damage reduction from flare pistols (and iDoT)
+var float MeleeBodyDamageMult;  // damage reduction from melee body-hits
+
 
 replication
 {
@@ -15,6 +18,26 @@ replication
         bMovingChaingunAttack;
 }
 
+
+function TakeDamage(int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector momentum, class<DamageType> DamType, optional int HitIndex)
+{
+    local class<KFWeaponDamageType> KFDamType;
+
+    KFDamType = class<KFWeaponDamageType>(DamType);
+    if (KFDamType != none) {
+        if (KFDamType.default.bDealBurningDamage) {
+            if (ClassIsChildOf(KFDamType, class'DamTypeFlareRevolver')) {
+                Damage *= FlareDamageMult;
+            }
+        }
+        else if (KFDamType.default.bIsMeleeDamage) {
+            if (!IsHeadShot(Hitlocation, normal(momentum), 1.25)) {
+                Damage *= MeleeBodyDamageMult;
+            }
+        }
+    }
+    Super.TakeDamage(Damage, instigatedBy, hitLocation, momentum, DamType);
+}
 
 simulated function bool HitCanInterruptAction()
 {
@@ -674,6 +697,8 @@ defaultproperties
     ScoringValue=1000
     EscapeShieldDamageMult=0.2  // 80% resistance
     HealingShieldDamageMultHoE=0.5  // 50% resistance
+    FlareDamageMult=0.67 // 33% resistance
+    MeleeBodyDamageMult=0.75 // 25% resistance
     ClawMeleeDamageRange=75
     ImpaleMeleeDamageRange=85
 

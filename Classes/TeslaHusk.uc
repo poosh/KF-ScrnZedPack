@@ -245,7 +245,8 @@ function RangedAttack(Actor A)
             IntermediateTarget = none;
             bShoot = true;
         }
-        else if ( !TryHealing() && bChainThoughZED && Energy > 50 && Level.TimeSeconds > NextChainZedSearchTime
+        else if ( (Level.TimeSeconds < NextHealAttemptTime || !TryHealing())
+                    && bChainThoughZED && Energy > 50 && Level.TimeSeconds > NextChainZedSearchTime
                     && Controller.Enemy == A && KFPawn(A) != none
                     && Dist < MaxPrimaryBeamRange * 1.9 )
             {
@@ -566,14 +567,7 @@ state Healing
         HeadHealthMax = Patient.default.HeadHealth * Patient.DifficultyHeadHealthModifer() * Patient.NumPlayersHeadHealthModifer();
         HeadHealthToAdd = min(ceil(HeadHealthMax * HealHeadRate * dt), HeadHealthMax - Patient.HeadHealth);
 
-        if ( HealthToAdd * HealEnergyDrain > Energy ) {
-            HealthToAdd = Energy / HealEnergyDrain;
-            HeadHealthToAdd = min(HeadHealthToAdd, Energy / HealEnergyDrain);
-            Energy = 0;
-        }
-        else {
-            Energy -= HealthToAdd * HealEnergyDrain;
-        }
+        Energy -= (HealthToAdd + HeadHealthToAdd) * HealEnergyDrain;
         Patient.HeadHealth += HeadHealthToAdd;
         Patient.Health += HealthToAdd;
 
@@ -906,7 +900,7 @@ defaultproperties
     BeamClass=class'TeslaBeam'
     Energy=100
     EnergyMax=100
-    EnergyRestoreRate=10
+    EnergyRestoreRate=8
     ProjectileFireInterval=8.0
     BleedOutDuration=5.0
 

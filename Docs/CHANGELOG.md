@@ -3,8 +3,26 @@
 > [go back to README](../README.md 'go back to Table of Content')
 
 <!-- steam link shortcuts -->
+[Joe]: http://steamcommunity.com/profiles/76561198005354377
 [NikC-]: http://steamcommunity.com/profiles/76561198044316328
 [Vrana]: https://steamcommunity.com/profiles/76561198021913290
+
+## v9.69.11 - POST-MORTEM UPDATE
+
+- **Husk** cannot shoot while falling, dying, or evading other Husk's fireball (by [NikC-])
+- **Siren** stops screaming immediately after dying (by [NikC-])
+- **Crawler** cannot attack more than once per second. That fixes instant-kill issues where Crawlers were hitting
+  again and again by jumping off each other's back.
+- **HardPat** gets 33% damage resistance from Flare iDoT
+- **HardPat** gets 25% damage resistance from melee body hits (no resistance to head hits)
+- Fixed **FleshPound** dealing insane amount of damage when enraged while performing a hit (thanks [Joe])
+- **TeslaHusk** now uses energy on repairing FP/FFP/TH head too. Previously, TH used energy to repair body health only,
+  while the head was repaired for "free". On HoE, a fully charged TH can repair up to 3500hp, or 1750 body + 1750 head
+  if the head is severely damaged. In previous versions, TH could repair 3500hp body + 3500hp head.
+- **TeslaHusk** energy restore rate lowered by 25%. Previously, it took 10s to restore full energy up from 0. Now, it
+  takes 12.5s.
+- Fixed an issue where sometimes **TeslaHusk** could repair multiple targets in a raw, bypassing the cooldown timer.  
+
 
 ## v9.69.09 - FINAL
 

@@ -121,7 +121,7 @@ function HurtRadius(float DamageAmount, float DamageRadius, class<DamageType> Da
     {
         // some optimizations
         // https://wiki.beyondunreal.com/Legacy:Code_Optimization#Optimize_iterator_use
-        if (Victim.bStatic || Victim.Physics == PHYS_None || !FastTrace(Victim.Location, Location))
+        if (Victim.bStatic && !FastTrace(Victim.Location, Location))
             continue; // skip this actor
 
         // don't let blast damage affect fluid - VisibleCollisingActors doesn't really work for them - jag
@@ -165,7 +165,7 @@ function HurtRadius(float DamageAmount, float DamageRadius, class<DamageType> Da
 }
 
 
-// DEAD sirens can NOT spawn scream emitter 
+// DEAD sirens can NOT spawn scream emitter
 simulated function PlayDying(class<DamageType> DamageType, vector HitLoc)
 {
     super.PlayDying(DamageType, HitLoc);
@@ -180,7 +180,7 @@ state ZombieDying
 ignores AnimEnd, Trigger, Bump, HitWall, HeadVolumeChange, PhysicsVolumeChange, Falling, BreathTimer, Died, RangedAttack;
 
     simulated function BeginState()
-    {   
+    {
         // yea, stop all animations on dead zed
         StopAnimating();
 
