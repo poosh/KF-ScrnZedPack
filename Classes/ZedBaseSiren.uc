@@ -121,7 +121,7 @@ function HurtRadius(float DamageAmount, float DamageRadius, class<DamageType> Da
     {
         // some optimizations
         // https://wiki.beyondunreal.com/Legacy:Code_Optimization#Optimize_iterator_use
-        if (Victim.bStatic && !FastTrace(Victim.Location, Location))
+        if (Victim.bStatic || !FastTrace(Victim.Location, Location))
             continue; // skip this actor
 
         // don't let blast damage affect fluid - VisibleCollisingActors doesn't really work for them - jag
