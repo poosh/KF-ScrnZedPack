@@ -60,6 +60,16 @@ function RangedAttack(Actor A)
     NextMeleeTime = Level.TimeSeconds + 1.0;
 }
 
+function bool CanAttack(Actor A)
+{
+    return class'ScrnZedFunc'.static.CanAttack(self, A);
+}
+
+function bool MeleeDamageTarget(int hitdamage, vector pushdir)
+{
+    return class'ScrnZedFunc'.static.MeleeDamageTarget(self, hitdamage, pushdir);
+}
+
 
 defaultproperties
 {

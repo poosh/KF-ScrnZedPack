@@ -120,6 +120,113 @@ static function ZedDestroyed(KFMonster M)
 {
 }
 
+static function float DistXY(vector A, vector B)
+{
+    A.Z = 0;
+    B.Z = 0;
+    return VSize(A - B);
+}
+
+static function bool IsInMeleeRange(KFMonster M, Actor A)
+{
+    local float dist;
+
+    if (A == none)
+        return false;
+
+    dist = VSize(A.Location - M.Location) - M.CollisionRadius - A.CollisionRadius;
+
+    if (dist < M.MeleeRange)
+        return true;
+    if (dist > M.MeleeRange + M.CollisionHeight + A.CollisionHeight
+            || abs(M.Location.Z - A.Location.Z) > (M.CollisionHeight + A.CollisionHeight))
+        return false;
+
+    return DistXY(A.Location, M.Location) - M.CollisionRadius - A.CollisionRadius < M.MeleeRange
+            && M.FastTrace(A.Location, M.Location);
+}
+
+static function bool CanAttack(KFMonster M, Actor A)
+{
+	if (M.bSTUNNED || A == none)
+		return false;
+	if (KFDoorMover(A) != none)
+		return true;
+	if (KFHumanPawn(A) != none && KFHumanPawn(A).Health <= 0)
+		return ( VSize(A.Location - M.Location) < M.MeleeRange + M.CollisionRadius);
+
+    return IsInMeleeRange(M, A);
+}
+
+static function bool MeleeDamageTarget(KFMonster M, int hitdamage, vector pushdir)
+{
+    local vector HitLocation, HitNormal;
+    local actor HitActor;
+    local Name TearBone;
+    local float dummy;
+    local Emitter BloodHit;
+    local Actor Target;
+    local KFHumanPawn HumanTarget;
+    local class<DamTypeZombieAttack> DamType;
+
+    if (M.Controller == none || M.Controller.Target == none || m.bSTUNNED || m.DECAP)
+        return false;
+
+    Target = M.Controller.Target;
+    DamType = M.CurrentDamType;
+    if (DamType == none) {
+        DamType = M.ZombieDamType[0];
+        if (DamType == none) {
+            // wtf?
+            DamType = class'KFMod.ZombieMeleeDamage';
+        }
+    }
+
+    if (Target.IsA('KFDoorMover')) {
+        Target.TakeDamage(hitdamage, M, Target.Location, pushdir, DamType);
+        return true;
+    }
+
+
+    if (!IsInMeleeRange(M, target)) {
+        return false;
+    }
+
+    // See if a trace would hit a pawn (Have to turn of hit point collision so trace doesn't hit the Human Pawn's bullet whiz cylinder)
+    M.bBlockHitPointTraces = false;
+    HitActor = M.Trace(HitLocation, HitNormal, Target.Location, M.Location + M.EyePosition(), true);
+    M.bBlockHitPointTraces = true;
+
+    // If the trace wouldn't hit a pawn, do the old thing of just checking if there is something blocking the trace
+    if (Pawn(HitActor) == none) {
+        // Have to turn of hit point collision so trace doesn't hit the Human Pawn's bullet whiz cylinder
+        M.bBlockHitPointTraces = false;
+        HitActor = M.Trace(HitLocation, HitNormal, Target.Location, M.Location, false);
+        M.bBlockHitPointTraces = true;
+
+        if (HitActor != none)
+            return false;
+    }
+
+    if (KFMonster(Target) != none) {
+        hitdamage *= M.DamageToMonsterScale;
+    }
+
+    Target.TakeDamage(hitdamage, M, HitLocation, pushdir, DamType);
+
+    HumanTarget = KFHumanPawn(Target);
+    if (HumanTarget != none &&  HumanTarget.Health <= 0 && !class'GameInfo'.static.UseLowGore()) {
+        if (!class'GameInfo'.static.UseLowGore()) {
+            BloodHit = M.Spawn(class'KFMod.FeedingSpray', M,, HumanTarget.Location, rotator(pushdir));     //
+            HumanTarget.SpawnGibs(rotator(pushdir), 1);
+            TearBone = HumanTarget.GetClosestBone(HitLocation, M.Velocity, dummy);
+            HumanTarget.HideBone(TearBone);
+        }
+    }
+
+    return true;
+}
+
 
 defaultproperties
 {

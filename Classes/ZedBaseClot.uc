@@ -26,6 +26,37 @@ function TakeDamage(int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector mo
         Super.TakeDamage(Damage, instigatedBy, hitLocation, momentum, DamType);
 }
 
+function bool CanAttack(Actor A)
+{
+    return class'ScrnZedFunc'.static.CanAttack(self, A);
+}
+
+function bool MeleeDamageTarget(int hitdamage, vector pushdir)
+{
+    return class'ScrnZedFunc'.static.MeleeDamageTarget(self, hitdamage, pushdir);
+}
+
+simulated function Tick(float DeltaTime)
+{
+    super(KFMonster).Tick(DeltaTime);
+
+    if (bShotAnim && Role == ROLE_Authority) {
+        if (LookTarget!=None)  {
+            Acceleration = AccelRate * Normal(LookTarget.Location - Location);
+        }
+    }
+
+    if (bGrappling && Role == ROLE_Authority) {
+        if (Level.TimeSeconds > GrappleEndTime) {
+            bGrappling = false;
+        }
+        else if (!class'ScrnZedFunc'.static.IsInMeleeRange(self, LookTarget)) {
+            bGrappling = false;
+            AnimEnd(1);
+        }
+    }
+}
+
 
 defaultproperties
 {

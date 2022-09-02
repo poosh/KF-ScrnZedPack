@@ -115,6 +115,16 @@ function RangedAttack(Actor A)
     }
 }
 
+function bool CanAttack(Actor A)
+{
+    return class'ScrnZedFunc'.static.CanAttack(self, A);
+}
+
+function bool MeleeDamageTarget(int hitdamage, vector pushdir)
+{
+    return class'ScrnZedFunc'.static.MeleeDamageTarget(self, hitdamage, pushdir);
+}
+
 state Running
 {
     function BeginState()
