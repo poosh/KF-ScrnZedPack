@@ -7,6 +7,9 @@
 [NikC-]: http://steamcommunity.com/profiles/76561198044316328
 [Vrana]: https://steamcommunity.com/profiles/76561198021913290
 
+## v9.69.38
+- Fixed a network replication bug where sometimes decapitated zeds kept their heads client-side
+
 ## v9.69.11 - POST-MORTEM UPDATE
 
 - **Husk** cannot shoot while falling, dying, or evading other Husk's fireball (by [NikC-])
@@ -21,7 +24,7 @@
   if the head is severely damaged. In previous versions, TH could repair 3500hp body + 3500hp head.
 - **TeslaHusk** energy restore rate lowered by 25%. Previously, it took 10s to restore full energy up from 0. Now, it
   takes 12.5s.
-- Fixed an issue where sometimes **TeslaHusk** could repair multiple targets in a raw, bypassing the cooldown timer.  
+- Fixed an issue where sometimes **TeslaHusk** could repair multiple targets in a raw, bypassing the cooldown timer.
 
 
 ## v9.69.09 - FINAL

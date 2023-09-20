@@ -42,12 +42,21 @@ function TakeDamage(int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector mo
         Super.TakeDamage(Damage, instigatedBy, hitLocation, momentum, DamType);
 }
 
+simulated function ProcessHitFX()
+{
+    super.ProcessHitFX();
+
+    // make sure the head is removed from decapitated zeds
+    if (bDecapitated && !bHeadGibbed) {
+        DecapFX(GetBoneCoords(HeadBone).Origin, rot(0,0,0), false, true);
+    }
+}
+
 simulated function ToggleAuxCollision(bool newbCollision)
 {
     if ( MyExtCollision != none )
         super.ToggleAuxCollision(newbCollision);
 }
-
 
 // let's edit original code to avoid copy-cats in every seasonal zed class
 function SpawnTwoShots()
@@ -68,7 +77,7 @@ function SpawnTwoShots()
 
     GetAxes(Rotation, X, Y, Z);
     FireStart = GetBoneCoords('Barrel').Origin;
-    
+
     // back to roots, use MyAmmo variable
     if (!SavedFireProperties.bInitialized)
     {

@@ -82,7 +82,7 @@ function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector M
         }
     }
 
-    // fixes none-reference erros when taking enviromental damage -- PooSH
+    // fixes none-reference errors when taking enviromental damage -- PooSH
     if (InstigatedBy == none || KFDamType == none)
         Super(Monster).TakeDamage(Damage, instigatedBy, hitLocation, momentum, damageType); // skip NONE-reference error
     else
@@ -98,6 +98,16 @@ function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector M
             && !bZapped && (!(bCrispified && bBurnified) || bFrustrated) )
     {
         StartCharging();
+    }
+}
+
+simulated function ProcessHitFX()
+{
+    super.ProcessHitFX();
+
+    // make sure the head is removed from decapitated zeds
+    if (bDecapitated && !bHeadGibbed) {
+        DecapFX(GetBoneCoords(HeadBone).Origin, rot(0,0,0), false, true);
     }
 }
 
