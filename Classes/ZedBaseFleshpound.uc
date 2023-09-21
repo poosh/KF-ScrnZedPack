@@ -2,6 +2,7 @@ class ZedBaseFleshpound extends ZombieFleshpound
 abstract;
 
 var class<ZedAvoidArea> AvoidAreaClass;
+var bool bDelayedCharge;
 
 simulated function PostBeginPlay()
 {
@@ -94,10 +95,18 @@ function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector M
     if ( Health <= 0 ) {
         DeviceGoNormal();
     }
-    else if ( !bDecapitated && TwoSecondDamageTotal > RageDamageThreshold && !bChargingPlayer && !bShotAnim
+    else if ( !bDecapitated && TwoSecondDamageTotal > RageDamageThreshold && !bChargingPlayer
             && !bZapped && (!(bCrispified && bBurnified) || bFrustrated) )
     {
-        StartCharging();
+        if (bShotAnim) {
+            if (Level.Game.GameDifficulty >= 5) {
+                // finish the current attack before rage
+                bDelayedCharge = true;
+            }
+        }
+        else {
+            StartCharging();
+        }
     }
 }
 
@@ -123,6 +132,15 @@ function Died(Controller Killer, class<DamageType> damageType, vector HitLocatio
 function bool SameSpeciesAs(Pawn P)
 {
     return P.IsA('ZombieFleshPound') || P.IsA('FemaleFP');
+}
+
+state RageCharging
+{
+    function EndState()
+    {
+        super.EndState();
+        bDelayedCharge = false;
+    }
 }
 
 defaultproperties

@@ -7,6 +7,12 @@
 [NikC-]: http://steamcommunity.com/profiles/76561198044316328
 [Vrana]: https://steamcommunity.com/profiles/76561198021913290
 
+## v9.69.39
+- Restored the original **Circus Husk** (Dancing Robot) - community request
+- Improved headshot detection for jumping/falling zeds on dedicated servers
+- Fixed an exploit when Fleshpound did not rage when dealing a massive damage during attack animation.
+- Now, FP rages immediately after finishing the attack animation (on Suicidal and HoE)
+
 ## v9.69.38
 - Fixed a network replication bug where sometimes decapitated zeds kept their heads client-side
 

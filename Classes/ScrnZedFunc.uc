@@ -59,11 +59,12 @@ static function bool IsHeadShot(KFMonster M, vector HitLoc, vector ray, float Ad
         if( !bWasAnimating && !bUseAltHeadShotLocation ) {
             M.SetAnimFrame(0.5);
         }
+        // increase head radius to compensate for net lag
+        AdditionalScale *= M.OnlineHeadshotScale;
     }
 
     if( bUseAltHeadShotLocation ) {
         HeadLoc = M.Location + (M.OnlineHeadshotOffset >> M.Rotation);
-        AdditionalScale *= M.OnlineHeadshotScale;
     }
     else {
         C = M.GetBoneCoords(M.HeadBone);

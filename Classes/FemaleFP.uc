@@ -742,27 +742,27 @@ simulated function Tick(float dt)
     }
 }
 
-simulated function DebugHead()
-{
-    local coords C;
-    local vector HeadLoc;
-    local float Radius;
+// simulated function DebugHead()
+// {
+//     local coords C;
+//     local vector HeadLoc;
+//     local float Radius;
 
-    if ( Level.NetMode == NM_DedicatedServer || Health <= 0 )
-        return;
+//     if ( Level.NetMode == NM_DedicatedServer || Health <= 0 )
+//         return;
 
-    Radius = HeadRadius * HeadScale;
+//     Radius = HeadRadius * HeadScale;
 
-    // based on head bone
-    C = GetBoneCoords(HeadBone);
-    HeadLoc = C.Origin + (HeadHeight * HeadScale * C.XAxis);
-    DrawDebugSphere(HeadLoc, Radius, 16, 0, 100, 255);
+//     // based on head bone
+//     C = GetBoneCoords(HeadBone);
+//     HeadLoc = C.Origin + (HeadHeight * HeadScale * C.XAxis);
+//     DrawDebugSphere(HeadLoc, Radius, 16, 0, 100, 255);
 
-    // based on OnlineHeadshotOffset
-    HeadLoc = Location + (OnlineHeadshotOffset >> Rotation);
-    Radius *= OnlineHeadshotScale;
-    DrawDebugSphere(HeadLoc, Radius, 16, 255, 0, 0);
-}
+//     // based on OnlineHeadshotOffset
+//     HeadLoc = Location + (OnlineHeadshotOffset >> Rotation);
+//     Radius *= OnlineHeadshotScale;
+//     DrawDebugSphere(HeadLoc, Radius, 16, 255, 0, 0);
+// }
 
 function bool FlipOver()
 {

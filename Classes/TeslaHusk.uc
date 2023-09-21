@@ -878,7 +878,7 @@ defaultproperties
 
     HeadOffset=(X=-5.0,Y=-2.0)
     OnlineHeadshotOffset=(X=22.000000,Z=50.000000)
-    OnlineHeadshotScale=1.0
+    OnlineHeadshotScale=1.2
     ColOffset=(Z=36.000000)
     ColRadius=30.000000
     ColHeight=30
