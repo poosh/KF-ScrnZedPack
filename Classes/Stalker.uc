@@ -16,6 +16,6 @@ defaultproperties
      ChallengeSound(3)=SoundGroup'KF_EnemiesFinalSnd.Stalker.Stalker_Challenge'
      AmbientSound=Sound'KF_BaseStalker.Stalker_IdleLoop'
      Mesh=SkeletalMesh'KF_Freaks_Trip.Stalker_Freak'
-     Skins(0)=Shader'KF_Specimens_Trip_T.stalker_invisible'
-     Skins(1)=Shader'KF_Specimens_Trip_T.stalker_invisible'
+     Skins[0]=Combiner'KF_Specimens_Trip_T.stalker_cmb'
+     Skins[1]=FinalBlend'KF_Specimens_Trip_T.stalker_fb'
 }

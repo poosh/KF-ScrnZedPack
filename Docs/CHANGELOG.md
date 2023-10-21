@@ -7,6 +7,11 @@
 [NikC-]: http://steamcommunity.com/profiles/76561198044316328
 [Vrana]: https://steamcommunity.com/profiles/76561198021913290
 
+## v9.69.40
+- Added `bCommandoRevealsStalkers` config option for Commando to reveal Stalkers for all teammates (like in KF2)
+- bCommandoRevealsStalkers does not affect Ghosts
+- Refactored Stalker and Ghost code
+
 ## v9.69.39
 - Restored the original **Circus Husk** (Dancing Robot) - community request
 - Improved headshot detection for jumping/falling zeds on dedicated servers

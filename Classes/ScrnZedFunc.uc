@@ -5,6 +5,7 @@ class ScrnZedFunc extends Object
 var config bool bHeadshotSrvAnim;
 var config bool bHeadshotSrvDebugAnim;
 var config bool bHeadshotSrvTorsoTwist;
+var config bool bCommandoRevealsStalkers;
 
 
 static function bool IsHeadShot(KFMonster M, vector HitLoc, vector ray, float AdditionalScale, vector HeadOffset)
