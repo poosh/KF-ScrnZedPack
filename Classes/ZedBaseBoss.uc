@@ -318,4 +318,14 @@ defaultproperties
     AvoidAreaClass=class'ZedAvoidArea'
     RadialRange=150
     RadialDamage=70
+
+    // not sure if DoubleJump or Dodge anims are used, but Pat doesn't have "Jump" anim
+    DoubleJumpAnims(0)="JumpTakeOff"
+    DoubleJumpAnims(1)="JumpTakeOff"
+    DoubleJumpAnims(2)="JumpTakeOff"
+    DoubleJumpAnims(3)="JumpTakeOff"
+    DodgeAnims(0)="JumpTakeOff"
+    DodgeAnims(1)="JumpTakeOff"
+    DodgeAnims(2)="JumpTakeOff"
+    DodgeAnims(3)="JumpTakeOff"
 }

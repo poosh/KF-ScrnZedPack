@@ -7,6 +7,13 @@
 [NikC-]: http://steamcommunity.com/profiles/76561198044316328
 [Vrana]: https://steamcommunity.com/profiles/76561198021913290
 
+## v9.69.45
+- Enhanced headshot detection (again).
+- New config option `bHeadshotSrvFixAttackAndMove` - fixes headshot detection if the zed is attacking while keep moving. Enabled by default.
+- `bHeadshotSrvAnim` replaced by `bHeadshotSrvFixWalk`. The latter does the same but has a more meaningful name.
+- Fixed a warning: "PlayAnim: Sequence 'Jump' not found for mesh 'Patriarch_Freak'"
+- Fixed a network replication bug where sometimes a decapitated **Bloat** kept his head client-side.
+
 ## v9.69.40
 - Added `bCommandoRevealsStalkers` config option for Commando to reveal Stalkers for all teammates (like in KF2)
 - bCommandoRevealsStalkers does not affect Ghosts

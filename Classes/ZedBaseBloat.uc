@@ -69,6 +69,16 @@ function SpawnTwoShots()
     ToggleAuxCollision(true);
 }
 
+simulated function ProcessHitFX()
+{
+    super.ProcessHitFX();
+
+    // make sure the head is removed from decapitated zeds
+    if (bDecapitated && !bHeadGibbed) {
+        DecapFX(GetBoneCoords(HeadBone).Origin, rot(0,0,0), false, true);
+    }
+}
+
 
 defaultproperties
 {

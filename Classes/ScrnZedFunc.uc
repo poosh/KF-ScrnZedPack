@@ -2,8 +2,8 @@ class ScrnZedFunc extends Object
     config(ScrnZedPack)
     abstract;
 
-var config bool bHeadshotSrvAnim;
-var config bool bHeadshotSrvDebugAnim;
+var config bool bHeadshotSrvFixWalk;
+var config bool bHeadshotSrvFixAttackAndMove;
 var config bool bHeadshotSrvTorsoTwist;
 var config bool bCommandoRevealsStalkers;
 
@@ -14,68 +14,92 @@ static function bool IsHeadShot(KFMonster M, vector HitLoc, vector ray, float Ad
     local vector HeadLoc;
     local int look;
     local bool bUseAltHeadShotLocation;
-    local bool bWasAnimating;
+    local name FakeAnim;
 
     if ( M.HeadBone == '' )
         return false;
 
-    if ( M.Level.NetMode == NM_DedicatedServer && !M.bShotAnim ) {
-        // If we are a dedicated server estimate what animation is most likely playing on the client
-        switch ( M.Physics ) {
-            case PHYS_Walking:
-                bWasAnimating = default.bHeadshotSrvAnim && (M.IsAnimating(0) || M.IsAnimating(1));
-                if( !bWasAnimating ) {
-                    if ( M.bIsCrouched ) {
-                        M.PlayAnim(M.IdleCrouchAnim, 1.0, 0.0);
+    if (M.Level.NetMode == NM_DedicatedServer) {
+        // DebugAnim(M);
+        if (M.bShotAnim) {
+            // bUseFreezeHack is used when the zed is playing stun, rage or still attack animation.
+            // In that case, we use the actual head location on the server.
+            if (default.bHeadshotSrvFixAttackAndMove && !KFMonsterController(M.Controller).bUseFreezeHack) {
+                if (!M.IsAnimating(0)) {
+                    // Zed blends attack animation on channel into movement animation in channel 0.
+                    // Since a dedicated server does not play movement animations, the base skeleton can be in T-pose
+                    // or some garbage state left from the previos animation.
+                    // To fix that, we play either movement or idle animation on channel 0, depending on acceleration.
+                    if (VSizeSquared(M.Acceleration) > 150.f) {
+                        FakeAnim = M.MovementAnims[0];
                     }
                     else {
-                        bUseAltHeadShotLocation=true;
+                        FakeAnim = M.IdleRestAnim;
                     }
                 }
-                else if ( default.bHeadshotSrvDebugAnim ) {
-                    DebugAnim(M);
-                }
-
-                if ( default.bHeadshotSrvTorsoTwist && M.bDoTorsoTwist && !bUseAltHeadShotLocation ) {
-                    M.SmoothViewYaw = M.Rotation.Yaw;
-                    M.SmoothViewPitch = M.ViewPitch;
-
-                    look = (256 * M.ViewPitch) & 65535;
-                    if (look > 32768)
-                        look -= 65536;
-
-                    M.SetTwistLook(0, look);
-                }
-                break;
-
-            case PHYS_Falling:
-            case PHYS_Flying:
-                M.PlayAnim(M.AirAnims[0], 1.0, 0.0);
-                break;
-            case PHYS_Swimming:
-                M.PlayAnim(M.SwimAnims[0], 1.0, 0.0);
-                break;
+                // increase head radius to compensate for net lag
+                AdditionalScale *= M.OnlineHeadshotScale;
+            }
         }
+        else {
+            // If we are a dedicated server, estimate what animation is most likely playing on the client
+            switch (M.Physics) {
+                case PHYS_Walking:
+                    // if bHeadshotSrvFixWalk=true (default), we ignore whatever garbage animations zed may be playing
+                    // during walking (and not attacking), so we force bUseAltHeadShotLocation=true.
+                    // Neigher of KF zeds can crouch, so the bIsCrouched check is kinda redundant.
+                    if (default.bHeadshotSrvFixWalk || (!M.IsAnimating(0) && !M.IsAnimating(1))) {
+                        if (M.bIsCrouched) {
+                            FakeAnim = M.IdleCrouchAnim;
+                        }
+                        else {
+                            bUseAltHeadShotLocation=true;
+                        }
+                    }
 
-        if( !bWasAnimating && !bUseAltHeadShotLocation ) {
-            M.SetAnimFrame(0.5);
+                    // the code I do not understand. Disabled by default.
+                    if (default.bHeadshotSrvTorsoTwist && M.bDoTorsoTwist && !bUseAltHeadShotLocation) {
+                        M.SmoothViewYaw = M.Rotation.Yaw;
+                        M.SmoothViewPitch = M.ViewPitch;
+
+                        look = (256 * M.ViewPitch) & 65535;
+                        if (look > 32768)
+                            look -= 65536;
+
+                        M.SetTwistLook(0, look);
+                    }
+                    break;
+
+                case PHYS_Falling:
+                case PHYS_Flying:
+                    FakeAnim = M.AirAnims[0];
+                    break;
+                case PHYS_Swimming:
+                    FakeAnim = M.SwimAnims[0];
+                    break;
+            }
+            // increase head radius to compensate for net lag
+            AdditionalScale *= M.OnlineHeadshotScale;
         }
-        // increase head radius to compensate for net lag
-        AdditionalScale *= M.OnlineHeadshotScale;
     }
 
-    if( bUseAltHeadShotLocation ) {
+    if (bUseAltHeadShotLocation) {
         HeadLoc = M.Location + (M.OnlineHeadshotOffset >> M.Rotation);
     }
     else {
+        if (FakeAnim != '') {
+            // log("FakeAnim=" $ FakeAnim);
+            M.PlayAnim(FakeAnim, 1.0, 0.0);
+            M.SetAnimFrame(0.5);
+        }
+
         C = M.GetBoneCoords(M.HeadBone);
         // AdditionalScale should not be here - it makes head by 25% higher when hitting with melee weapons.
         HeadLoc = C.Origin + (M.HeadHeight * M.HeadScale * C.XAxis)
             + HeadOffset.X * C.XAxis + HeadOffset.Y * C.YAxis + HeadOffset.Z * C.ZAxis;
     }
 
-    return class'ScrnF'.static.TestHitboxSphere(HitLoc, Ray, HeadLoc,
-            M.HeadRadius * M.HeadScale * AdditionalScale);
+    return class'ScrnF'.static.TestHitboxSphere(HitLoc, Ray, HeadLoc, M.HeadRadius * M.HeadScale * AdditionalScale);
 }
 
 static function DebugAnim(KFMonster M)
@@ -86,18 +110,22 @@ static function DebugAnim(KFMonster M)
     local vector HeadLoc, SrvLoc, Diff;
     local coords C;
 
+    C = M.GetBoneCoords(M.HeadBone);
+    HeadLoc = C.Origin + (M.HeadHeight * M.HeadScale * C.XAxis);
+    SrvLoc = M.Location + (M.OnlineHeadshotOffset >> M.Rotation);
+    Diff = SrvLoc - HeadLoc;
+    log(M $ " server/client head diff: "$ VSize(Diff)$"u ("$Diff$")."
+            @ "bShotAnim=" $ M.bShotAnim
+            @ "bUseFreezeHack=" $ KFMonsterController(M.Controller).bUseFreezeHack
+            @ "Accel=" $ VSize(M.Acceleration)
+    );
+
     for ( i = 0; i < 2; ++i ) {
         if ( !M.IsAnimating(i) )
             continue;
         M.GetAnimParams(i, seq, frame, rate);
         log(M $ " channel="$i $ " anim="$seq $ " frame="$frame $ " rate="$rate);
     }
-
-    C = M.GetBoneCoords(M.HeadBone);
-    HeadLoc = C.Origin + (M.HeadHeight * M.HeadScale * C.XAxis);
-    SrvLoc = M.Location + (M.OnlineHeadshotOffset >> M.Rotation);
-    Diff = SrvLoc - HeadLoc;
-    log(M $ " server/client head diff: "$ VSize(Diff)$"u ("$Diff$")");
 }
 
 static function ZedBeginPlay(KFMonster M)
@@ -232,6 +260,8 @@ static function bool MeleeDamageTarget(KFMonster M, int hitdamage, vector pushdi
 
 defaultproperties
 {
-    bHeadshotSrvAnim=false
-    bHeadshotSrvTorsoTwist=true
+    bHeadshotSrvFixWalk=true
+    bHeadshotSrvFixAttackAndMove=true
+    bHeadshotSrvTorsoTwist=false
+    bCommandoRevealsStalkers=false
 }
