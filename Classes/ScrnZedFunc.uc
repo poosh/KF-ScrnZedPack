@@ -24,7 +24,8 @@ static function bool IsHeadShot(KFMonster M, vector HitLoc, vector ray, float Ad
         if (M.bShotAnim) {
             // bUseFreezeHack is used when the zed is playing stun, rage or still attack animation.
             // In that case, we use the actual head location on the server.
-            if (default.bHeadshotSrvFixAttackAndMove && !KFMonsterController(M.Controller).bUseFreezeHack) {
+            if (default.bHeadshotSrvFixAttackAndMove && KFMonsterController(M.Controller) != none
+                    && !KFMonsterController(M.Controller).bUseFreezeHack) {
                 if (!M.IsAnimating(0)) {
                     // Zed blends attack animation on channel into movement animation in channel 0.
                     // Since a dedicated server does not play movement animations, the base skeleton can be in T-pose

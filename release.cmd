@@ -27,9 +27,8 @@ echo Exporting .int file...
 
 echo.
 echo Copying release files...
-xcopy /F /I /Y *.ini %RELEASEDIR%
-xcopy /F /I /Y *.txt %RELEASEDIR%
-xcopy /F /I /Y *.md  %RELEASEDIR%
+xcopy /F /I /Y Configs\*.ini %RELEASEDIR%
+xcopy /F /I /Y Docs\CHANGELOG.md  %RELEASEDIR%
 
 mkdir %RELEASEDIR%\System 2>nul
 xcopy /F /I /Y %KFDIR%\System\%KFPACKAGE%.int %RELEASEDIR%\System\

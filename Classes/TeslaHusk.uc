@@ -886,7 +886,7 @@ defaultproperties
     HeadHealth=250 // Husk=200
     Health=800 // Husk = 600
     HealthMax=800 // Husk = 600
-    ScoringValue=25 // Husk=17
+    ScoringValue=35
     BurnDamageScale=1.0 // no fire damage resistance
 
     bMeleeFighter=false

@@ -7,6 +7,9 @@
 [NikC-]: http://steamcommunity.com/profiles/76561198044316328
 [Vrana]: https://steamcommunity.com/profiles/76561198021913290
 
+## v9.69.50
+-- **Husk** and **Tesla Husk** bounty raised to 35 (up from 17 and 25, respectively) to match `ScrnBalance.MarkZedBounty`. The original bounty was ridiculously low. For instance Siren has 25.
+
 ## v9.69.45
 - Enhanced headshot detection (again).
 - New config option `bHeadshotSrvFixAttackAndMove` - fixes headshot detection if the zed is attacking while keep moving. Enabled by default.

@@ -177,6 +177,7 @@ defaultproperties
     MaxMeleeAttacks=2
     ShotsRemaining=1
     MaxFireRange=10000  // 200m
+    ScoringValue=35  // up from 17
     // Husk doesn't have burning animations
     BurningWalkFAnims(0)="WalkF"
     BurningWalkFAnims(1)="WalkF"
