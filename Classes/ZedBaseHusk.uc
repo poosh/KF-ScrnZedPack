@@ -178,6 +178,7 @@ defaultproperties
     ShotsRemaining=1
     MaxFireRange=10000  // 200m
     ScoringValue=35  // up from 17
+    ZappedDamageMod=1.5  // down from 2.0
     // Husk doesn't have burning animations
     BurningWalkFAnims(0)="WalkF"
     BurningWalkFAnims(1)="WalkF"

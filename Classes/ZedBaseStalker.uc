@@ -154,6 +154,7 @@ simulated function CloakStalker()
         return;
 
     if (bSpotted) {
+        Visibility = 120;
         if( Level.NetMode == NM_DedicatedServer )
             return;
 

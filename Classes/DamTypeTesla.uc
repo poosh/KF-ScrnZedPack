@@ -1,4 +1,4 @@
-class DamTypeTesla extends DamTypeZombieAttack
+class DamTypeTesla extends DamTypeBaseZombieElectric
     abstract;
 
 defaultproperties
