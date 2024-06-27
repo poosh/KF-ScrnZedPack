@@ -10,7 +10,12 @@ var float EscapeShieldDamageMult;  // damage reduction while escaping
 var float HealingShieldDamageMultHoE;  // damage reduction while healing (HoE only)
 var float FlareDamageMult;  // damage reduction from flare pistols (and iDoT)
 var float MeleeBodyDamageMult;  // damage reduction from melee body-hits
+var float MultiRocketRadiusMult; // damage radius reduction on subsequent rockets
+var float EscapeSpeedMod;
+var float MinigunSpeedMod;
+var float ChargeMinigunSpeedMod;
 
+var transient float NextMinigunChargeTime;
 
 replication
 {
@@ -270,7 +275,11 @@ state FireChaingun
     {
         Super.BeginState();
         bMovingChaingunAttack = Level.Game.GameDifficulty >= 4 && SyringeCount >= 2 && (bEndGameBoss || FRand() < 0.4);
-        bChargingPlayer = Level.Game.GameDifficulty >= 5 && bEndGameBoss && SyringeCount >= 3 && FRand() < 0.4f;
+        bChargingPlayer = Level.Game.GameDifficulty >= 5 && bEndGameBoss && SyringeCount >= 3 && NextMinigunChargeTime < Level.TimeSeconds;
+        if (bChargingPlayer) {
+            bMovingChaingunAttack = true;
+            NextMinigunChargeTime = Level.TimeSeconds + 30.0 + 15.0*frand();
+        }
         bCanStrafe = true;
         LastMeleeExploitCheckTime = Level.TimeSeconds + 3.0; // prevent Radial attack at the beginning of firing
     }
@@ -287,9 +296,9 @@ state FireChaingun
     {
         Super(KFMonster).Tick(Delta);
         if( bChargingPlayer )
-            GroundSpeed = OriginalGroundSpeed * 2.3;
+            GroundSpeed = OriginalGroundSpeed * ChargeMinigunSpeedMod;
         else
-            GroundSpeed = OriginalGroundSpeed * 1.15;
+            GroundSpeed = OriginalGroundSpeed * MinigunSpeedMod;
     }
 
     function FinishFire()
@@ -483,7 +492,7 @@ state FireMissile
             MissilesLeft = 1 + Rand(3);
         }
         else {
-            MissilesLeft = 1 + Rand(2);
+            MissilesLeft = 1;
         }
         bFirstMissile = true;
         Acceleration = vect(0,0,0);
@@ -499,6 +508,7 @@ state FireMissile
     {
         local vector Start;
         local Rotator R;
+        local BossLAWProj proj;
 
         Start = GetBoneCoords('tip').Origin;
         if( Controller.Target==None )
@@ -515,11 +525,14 @@ state FireMissile
             SavedFireProperties.bInitialized = true;
         }
         SavedFireProperties.bInstantHit = (SyringeCount<1);
-        SavedFireProperties.bTrySplash = (SyringeCount>=2);
+        SavedFireProperties.bTrySplash = Level.Game.GameDifficulty >= 4 && SyringeCount >= 2;
 
         R = AdjustAim(SavedFireProperties,Start,100);
         PlaySound(RocketFireSound,SLOT_Interact,2.0,,TransientSoundRadius,,false);
-        Spawn(Class'BossLAWProj',,,Start,R);
+        proj = Spawn(Class'BossLAWProj',,,Start,R);
+        if (!bFirstMissile) {
+            proj.DamageRadius *= MultiRocketRadiusMult;
+        }
 
         bShotAnim = true;
         Acceleration = vect(0,0,0);
@@ -576,7 +589,7 @@ State Escaping
             if( Level.NetMode!=NM_DedicatedServer )
                 PostNetReceive();
         }
-        GroundSpeed = OriginalGroundSpeed * 2.5;
+        GroundSpeed = OriginalGroundSpeed * EscapeSpeedMod;
         Global.Tick(Delta);
     }
 
@@ -701,6 +714,10 @@ defaultproperties
     MeleeBodyDamageMult=0.75 // 25% resistance
     ClawMeleeDamageRange=75
     ImpaleMeleeDamageRange=85
+    EscapeSpeedMod=2.5
+    MinigunSpeedMod=1.15
+    ChargeMinigunSpeedMod=1.75
+    MultiRocketRadiusMult=0.8
 
     // copy-pasted from ZombieBoss_STANDARD
     RocketFireSound=SoundGroup'KF_EnemiesFinalSnd.Patriarch.Kev_FireRocket'
