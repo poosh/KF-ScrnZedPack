@@ -171,7 +171,7 @@ defaultproperties
      MeleeDamage=25
      MeleeAttackHitSound=SoundGroup'KF_EnemiesFinalSnd.GoreFast.Gorefast_HitPlayer'
      HeadHealth=800.000000
-     ScoringValue=300
+     ScoringValue=125
      HealthMax=1500.000000
      Health=1500
      MenuName="Jason"

@@ -504,11 +504,21 @@ state FireMissile
         return Level.Game.GameDifficulty < 5 || !bFirstMissile;
     }
 
-    function AnimEnd( int Channel )
+    function bool HitCanInterruptAction()
+    {
+        return false;
+    }
+
+    function AnimEnd(int Channel)
     {
         local vector Start;
         local Rotator R;
         local BossLAWProj proj;
+
+        if (Channel != 0) {
+            global.AnimEnd(Channel);
+            return;
+        }
 
         Start = GetBoneCoords('tip').Origin;
         if( Controller.Target==None )

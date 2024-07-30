@@ -289,6 +289,15 @@ Begin:
     GotoNextState();
 }
 
+state FireMissile
+{
+    // Pat fires rocket on AnimEnd() - prevent hit animations from triggering it
+    function bool HitCanInterruptAction()
+    {
+        return false;
+    }
+}
+
 state KnockDown // Knocked
 {
     function bool ShouldKnockDownFromDamage()

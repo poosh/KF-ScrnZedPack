@@ -11,6 +11,15 @@ static function PreCacheMaterials(LevelInfo myLevel)
     }
 }
 
+state Screaming
+{
+    function bool HitCanInterruptAction()
+    {
+        // disable scream canceling
+        return false;
+    }
+}
+
 defaultproperties
 {
     ScreamForce=200000

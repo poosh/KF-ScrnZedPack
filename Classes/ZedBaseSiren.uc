@@ -72,8 +72,7 @@ function RangedAttack(Actor A)
         Acceleration = vect(0,0,0);
     }
     else if ( DistSq <= ScreamRadiusSq && !bDecapitated && !bZapped ) {
-        bShotAnim = true;
-        SetAnimAction('Siren_Scream');
+        GotoState('Screaming');
         if( DistSq < MoveScreamRadiusSq ) {
             // Only stop moving if we are close
             Controller.bPreparingMove = true;
@@ -83,6 +82,15 @@ function RangedAttack(Actor A)
             Acceleration = AccelRate * Normal(A.Location - Location);
         }
     }
+}
+
+state Screaming
+{
+Begin:
+    bShotAnim = true;
+    SetAnimAction('Siren_Scream');
+    Sleep(GetAnimDuration('Siren_Scream') + 0.1);
+    GotoState('');
 }
 
 simulated function SpawnTwoShots()
