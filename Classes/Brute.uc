@@ -664,6 +664,17 @@ static function PreCacheMaterials(LevelInfo myLevel)
     }
 }
 
+State ZombieDying
+{
+    function KVelDropBelow() {
+        // Don't shorten the LifeSpan after landed on high physiscs setting
+        if (Level.PhysicsDetailLevel != PDL_High) {
+            super.KVelDropBelow();
+        }
+    }
+}
+
+
 defaultproperties
 {
     RageDamageThreshold=50
@@ -752,4 +763,5 @@ defaultproperties
     HealthMax=1000.000000
     Health=1000
     MenuName="Brute"
+    RagdollLifeSpan=30
 }

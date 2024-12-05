@@ -929,126 +929,138 @@ static simulated function PreCacheMaterials(LevelInfo myLevel)
     myLevel.AddPrecacheMaterial(Shader'ScrnZedPack_T.FFP.FFP_Skin1_Sdr');
 }
 
+State ZombieDying
+{
+    function KVelDropBelow() {
+        // Don't shorten the LifeSpan after landed on high physiscs setting
+        if (Level.PhysicsDetailLevel != PDL_High) {
+            super.KVelDropBelow();
+        }
+    }
+}
+
+
 defaultproperties
 {
-     ChargingAnim="Rage_Run"
-     ChargingSpeedMult=2.3
-     Attack1DamageMult=0.60  // drilling attack, 60% of MeleeDamage
-     Attack2DamageMult=0.40  // x2 - there are two swing attacks
-     // Attack3DamageMult is always 1.0, i.e. deals MeleeDamage
-     RageDamageMult=1.25     // does 25% more damage while raged
-     RageMegaHitDamageMult=2.0  // RageDamageMult is NOT applied on the mega hit
-     RageMegaHitCounter=10.0
-     VentEffectClass=Class'FFPVentEmitter'
-     RageDamageThreshold=300
-     MeleeAnims(0)="Attack1"
-     MeleeAnims(1)="Attack2"
-     MeleeAnims(2)="Attack3"
-     HitAnims(0)="Hit"
-     HitAnims(1)="Hit"
-     HitAnims(2)="Hit"
-     MoanVoice=SoundGroup'ScrnZedPack_S.FFP.FFPG_Talk'
-     KFHitFront="Hit"
-     KFHitBack="Hit"
-     KFHitLeft="Hit"
-     KFHitRight="Hit"
-     StunsRemaining=3
-     BleedOutDuration=7.000000
-     ZapThreshold=1.750000
-     ZappedDamageMod=1.250000
-     ZombieFlag=3
-     MeleeDamage=30
-     damageForce=15000
-     bFatAss=True
-     KFRagdollName="FFPKarma"
-     MeleeAttackHitSound=SoundGroup'KF_EnemiesFinalSnd.Fleshpound.FP_HitPlayer'
-     JumpSound=SoundGroup'ScrnZedPack_S.FFP.FFPG_Jump'
-     SpinDamConst=15.000000
-     SpinDamRand=10.000000
-     bMeleeStunImmune=True
-     Intelligence=BRAINS_Mammal
-     bUseExtendedCollision=True
-     ColOffset=(X=25.0,Z=43.0)
-     ColRadius=30
-     ColHeight=30
-     ExtCollAttachBoneName="Collision_Attach"
-     SeveredLegAttachScale=1.100000
-     SeveredHeadAttachScale=1.200000
-     DetachedArmClass=Class'SeveredArmFFP'
-     DetachedLegClass=Class'SeveredLegFFP'
-     PlayerCountHealthScale=0.300000
-     OnlineHeadshotOffset=(X=25.0,Z=59.0)
-     OnlineHeadshotOffsetCharging=(X=35.0,Z=50.0)
-     OnlineHeadshotScale=1.3
-     HeadHealth=600.000000
-     PlayerNumHeadHealthScale=0.300000
-     MotionDetectorThreat=5.000000
-     HitSound(0)=SoundGroup'ScrnZedPack_S.FFP.FFPG_Pain'
-     DeathSound(0)=SoundGroup'ScrnZedPack_S.FFP.FFPG_Death'
-     ChallengeSound(0)=SoundGroup'ScrnZedPack_S.FFP.FFPG_Challenge'
-     ChallengeSound(1)=SoundGroup'ScrnZedPack_S.FFP.FFPG_Challenge'
-     ChallengeSound(2)=SoundGroup'ScrnZedPack_S.FFP.FFPG_Challenge'
-     ChallengeSound(3)=SoundGroup'ScrnZedPack_S.FFP.FFPG_Challenge'
-     ScoringValue=200
-     IdleHeavyAnim="Idle"
-     IdleRifleAnim="Idle"
-     FireRootBone="BODY_Spine2"
-     GroundSpeed=140.000000
-     AttackSpeedMult=0.60
-     HeavyAttackSpeedMult=0.45
-     HealthMax=1100.000000
-     Health=1100
-     HeadRadius=8.000000
-     HeadHeight=2.500000
-     HeadScale=1.300000
-     MenuName="Female FleshPound"
-     ControllerClass=Class'FFPController'
-     MovementAnims(0)="WalkF"
-     MovementAnims(1)="WalkB"
-     MovementAnims(2)="WalkL"
-     MovementAnims(3)="WalkR"
-     WalkAnims(0)="WalkF"
-     WalkAnims(1)="WalkB"
-     WalkAnims(2)="WalkL"
-     WalkAnims(3)="WalkR"
-     HeadlessWalkAnims(0)="Headless_WalkCycle"
-     HeadlessWalkAnims(1)="Headless_WalkCycle_Back"
-     HeadlessWalkAnims(2)="Headless_WalkCycle_Left"
-     HeadlessWalkAnims(3)="Headless_WalkCycle_Right"
+    ChargingAnim="Rage_Run"
+    ChargingSpeedMult=2.3
+    Attack1DamageMult=0.60  // drilling attack, 60% of MeleeDamage
+    Attack2DamageMult=0.40  // x2 - there are two swing attacks
+    // Attack3DamageMult is always 1.0, i.e. deals MeleeDamage
+    RageDamageMult=1.25     // does 25% more damage while raged
+    RageMegaHitDamageMult=2.0  // RageDamageMult is NOT applied on the mega hit
+    RageMegaHitCounter=10.0
+    VentEffectClass=Class'FFPVentEmitter'
+    RageDamageThreshold=300
+    MeleeAnims(0)="Attack1"
+    MeleeAnims(1)="Attack2"
+    MeleeAnims(2)="Attack3"
+    HitAnims(0)="Hit"
+    HitAnims(1)="Hit"
+    HitAnims(2)="Hit"
+    MoanVoice=SoundGroup'ScrnZedPack_S.FFP.FFPG_Talk'
+    KFHitFront="Hit"
+    KFHitBack="Hit"
+    KFHitLeft="Hit"
+    KFHitRight="Hit"
+    StunsRemaining=3
+    BleedOutDuration=7.000000
+    ZapThreshold=1.750000
+    ZappedDamageMod=1.250000
+    ZombieFlag=3
+    MeleeDamage=30
+    damageForce=15000
+    bFatAss=True
+    KFRagdollName="FFPKarma"
+    MeleeAttackHitSound=SoundGroup'KF_EnemiesFinalSnd.Fleshpound.FP_HitPlayer'
+    JumpSound=SoundGroup'ScrnZedPack_S.FFP.FFPG_Jump'
+    SpinDamConst=15.000000
+    SpinDamRand=10.000000
+    bMeleeStunImmune=True
+    Intelligence=BRAINS_Mammal
+    bUseExtendedCollision=True
+    ColOffset=(X=25.0,Z=43.0)
+    ColRadius=30
+    ColHeight=30
+    ExtCollAttachBoneName="Collision_Attach"
+    SeveredLegAttachScale=1.100000
+    SeveredHeadAttachScale=1.200000
+    DetachedArmClass=Class'SeveredArmFFP'
+    DetachedLegClass=Class'SeveredLegFFP'
+    PlayerCountHealthScale=0.300000
+    OnlineHeadshotOffset=(X=25.0,Z=59.0)
+    OnlineHeadshotOffsetCharging=(X=35.0,Z=50.0)
+    OnlineHeadshotScale=1.3
+    HeadHealth=600.000000
+    PlayerNumHeadHealthScale=0.300000
+    MotionDetectorThreat=5.000000
+    HitSound(0)=SoundGroup'ScrnZedPack_S.FFP.FFPG_Pain'
+    DeathSound(0)=SoundGroup'ScrnZedPack_S.FFP.FFPG_Death'
+    ChallengeSound(0)=SoundGroup'ScrnZedPack_S.FFP.FFPG_Challenge'
+    ChallengeSound(1)=SoundGroup'ScrnZedPack_S.FFP.FFPG_Challenge'
+    ChallengeSound(2)=SoundGroup'ScrnZedPack_S.FFP.FFPG_Challenge'
+    ChallengeSound(3)=SoundGroup'ScrnZedPack_S.FFP.FFPG_Challenge'
+    ScoringValue=200
+    IdleHeavyAnim="Idle"
+    IdleRifleAnim="Idle"
+    FireRootBone="BODY_Spine2"
+    GroundSpeed=140.000000
+    AttackSpeedMult=0.60
+    HeavyAttackSpeedMult=0.45
+    HealthMax=1100.000000
+    Health=1100
+    HeadRadius=8.000000
+    HeadHeight=2.500000
+    HeadScale=1.300000
+    MenuName="Female FleshPound"
+    ControllerClass=Class'FFPController'
+    MovementAnims(0)="WalkF"
+    MovementAnims(1)="WalkB"
+    MovementAnims(2)="WalkL"
+    MovementAnims(3)="WalkR"
+    WalkAnims(0)="WalkF"
+    WalkAnims(1)="WalkB"
+    WalkAnims(2)="WalkL"
+    WalkAnims(3)="WalkR"
+    HeadlessWalkAnims(0)="Headless_WalkCycle"
+    HeadlessWalkAnims(1)="Headless_WalkCycle_Back"
+    HeadlessWalkAnims(2)="Headless_WalkCycle_Left"
+    HeadlessWalkAnims(3)="Headless_WalkCycle_Right"
 
-     // cannot use flaming walking animations as they fuck up hitbox detection on the server
-     // BurningWalkFAnims(0)="Flaming_WalkCycle"
-     // BurningWalkFAnims(1)="Flaming_WalkCycle"
-     // BurningWalkFAnims(2)="Flaming_WalkCycle"
-     // BurningWalkAnims(0)="Flaming_WalkCycle_Back"
-     // BurningWalkAnims(1)="Flaming_WalkCycle_Left"
-     // BurningWalkAnims(2)="Flaming_WalkCycle_Right"
-     BurningWalkFAnims(0)="WalkF"
-     BurningWalkFAnims(1)="WalkF"
-     BurningWalkFAnims(2)="WalkF"
-     BurningWalkAnims(0)="WalkB"
-     BurningWalkAnims(1)="WalkL"
-     BurningWalkAnims(2)="WalkR"
+    // cannot use flaming walking animations as they fuck up hitbox detection on the server
+    // BurningWalkFAnims(0)="Flaming_WalkCycle"
+    // BurningWalkFAnims(1)="Flaming_WalkCycle"
+    // BurningWalkFAnims(2)="Flaming_WalkCycle"
+    // BurningWalkAnims(0)="Flaming_WalkCycle_Back"
+    // BurningWalkAnims(1)="Flaming_WalkCycle_Left"
+    // BurningWalkAnims(2)="Flaming_WalkCycle_Right"
+    BurningWalkFAnims(0)="WalkF"
+    BurningWalkFAnims(1)="WalkF"
+    BurningWalkFAnims(2)="WalkF"
+    BurningWalkAnims(0)="WalkB"
+    BurningWalkAnims(1)="WalkL"
+    BurningWalkAnims(2)="WalkR"
 
-     IdleCrouchAnim="Idle"
-     IdleWeaponAnim="Idle"
-     IdleRestAnim="Idle"
-     AirStillAnim="Jump"
-     TakeoffStillAnim="Jump"
+    IdleCrouchAnim="Idle"
+    IdleWeaponAnim="Idle"
+    IdleRestAnim="Idle"
+    AirStillAnim="Jump"
+    TakeoffStillAnim="Jump"
 
-     RootBone="Armature"
-     HeadBone="BODY_Head"
-     SpineBone1="BODY_Spine2"
-     SpineBone2="BODY_Spine3"
-     AmbientSound=SoundGroup'ScrnZedPack_S.FFP.FFPG_Idle'
-     Mesh=SkeletalMesh'ScrnZedPack_A.FFPMesh'
-     Skins(0)=Texture'ScrnZedPack_T.FFP.BraTexture'
-     Skins(1)=Combiner'ScrnZedPack_T.FFP.FFP_Metal_cmb'
-     Skins(2)=Combiner'ScrnZedPack_T.FFP.FFP_Metal_cmb'
-     Skins(3)=Shader'ScrnZedPack_T.FFP.FFPLights_Yellow_shader'
-     Skins(4)=Shader'ScrnZedPack_T.FFP.FFP_Skin1_Sdr'
-     CollisionRadius=26
-     Mass=500.000000
-     RotationRate=(Yaw=45000,Roll=0)
-     AvoidAreaClass=class'ZedAvoidArea'
+    RootBone="Armature"
+    HeadBone="BODY_Head"
+    SpineBone1="BODY_Spine2"
+    SpineBone2="BODY_Spine3"
+    AmbientSound=SoundGroup'ScrnZedPack_S.FFP.FFPG_Idle'
+    Mesh=SkeletalMesh'ScrnZedPack_A.FFPMesh'
+    Skins(0)=Texture'ScrnZedPack_T.FFP.BraTexture'
+    Skins(1)=Combiner'ScrnZedPack_T.FFP.FFP_Metal_cmb'
+    Skins(2)=Combiner'ScrnZedPack_T.FFP.FFP_Metal_cmb'
+    Skins(3)=Shader'ScrnZedPack_T.FFP.FFPLights_Yellow_shader'
+    Skins(4)=Shader'ScrnZedPack_T.FFP.FFP_Skin1_Sdr'
+    CollisionRadius=26
+    Mass=500.000000
+    RotationRate=(Yaw=45000,Roll=0)
+    AvoidAreaClass=class'ZedAvoidArea'
+    RagdollLifeSpan=30
 }

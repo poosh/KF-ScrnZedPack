@@ -7,6 +7,10 @@
 [NikC-]: http://steamcommunity.com/profiles/76561198044316328
 [Vrana]: https://steamcommunity.com/profiles/76561198021913290
 
+## v9.71
+- Pat dead body stays longer on the map
+- SC/FP dead bodies stay longer at high quality physics settings.
+
 ## v9.70.12
 ### Hard Pat
 - lowered charging minigun speed multiplier (x2.3 => x1.75)

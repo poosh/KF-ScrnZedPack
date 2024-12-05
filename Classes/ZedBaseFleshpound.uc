@@ -143,8 +143,20 @@ state RageCharging
     }
 }
 
+State ZombieDying
+{
+    function KVelDropBelow() {
+        // Don't shorten the LifeSpan after landed on high physiscs setting
+        if (Level.PhysicsDetailLevel != PDL_High) {
+            super.KVelDropBelow();
+        }
+    }
+}
+
+
 defaultproperties
 {
     ControllerClass=class'ZedControllerFleshpound'
     AvoidAreaClass=class'ZedAvoidArea'
+    RagdollLifeSpan=30
 }

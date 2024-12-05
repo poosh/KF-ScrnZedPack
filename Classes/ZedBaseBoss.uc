@@ -140,6 +140,12 @@ function TakeDamage(int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector mo
     }
 }
 
+simulated function PlayDyingAnimation(class<DamageType> DamageType, vector HitLoc)
+{
+    super.PlayDyingAnimation(DamageType, HitLoc);
+    KarmaParamsSkel(KParams).bKImportantRagdoll = true;
+}
+
 function bool CanRadialAttack()
 {
     local KFHumanPawn P;
@@ -320,6 +326,12 @@ State Escaping
     }
 }
 
+State ZombieDying
+{
+    // Don't shorten the LifeSpan after landed
+    function KVelDropBelow() {}
+}
+
 
 defaultproperties
 {
@@ -327,6 +339,7 @@ defaultproperties
     AvoidAreaClass=class'ZedAvoidArea'
     RadialRange=150
     RadialDamage=70
+    RagdollLifeSpan=120
 
     // not sure if DoubleJump or Dodge anims are used, but Pat doesn't have "Jump" anim
     DoubleJumpAnims(0)="JumpTakeOff"

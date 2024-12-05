@@ -69,9 +69,19 @@ State SawingLoop
     }
 }
 
+State ZombieDying
+{
+    function KVelDropBelow() {
+        // Don't shorten the LifeSpan after landed on high physiscs setting
+        if (Level.PhysicsDetailLevel != PDL_High) {
+            super.KVelDropBelow();
+        }
+    }
+}
 
 defaultproperties
 {
     ControllerClass=class'ZedControllerScrake'
     SawDamage=10
+    RagdollLifeSpan=30
 }
