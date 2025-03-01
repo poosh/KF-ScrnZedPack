@@ -7,18 +7,19 @@ var transient float MaxFireRangeSq;
 var() int ShotsRemaining;  // how many fireballs Husk can shoot without cooldown
 var transient int MaxShotsRemaining;
 
-
 simulated function PostBeginPlay()
 {
     super.PostBeginPlay();
 
-    // and why TWI removed this feature...
-    MyAmmo = spawn(AmmunitionClass);
+    if (Controller != none) {
+        // and why TWI removed this feature...
+        MyAmmo = spawn(GetAmmunitionClass());
 
-    MaxFireRangeSq = Square(MaxFireRange);
-    MaxShotsRemaining = ShotsRemaining;
-    ShotsRemaining = 1 + rand(MaxShotsRemaining);
-    MaxMeleeAttacks = 1 + rand(MaxMeleeAttacks);
+        MaxFireRangeSq = Square(MaxFireRange);
+        MaxShotsRemaining = ShotsRemaining;
+        ShotsRemaining = 1 + rand(MaxShotsRemaining);
+        MaxMeleeAttacks = 1 + rand(MaxMeleeAttacks);
+    }
 
     class'ScrnZedFunc'.static.ZedBeginPlay(self);
 }
@@ -27,6 +28,14 @@ simulated function Destroyed()
 {
     class'ScrnZedFunc'.static.ZedDestroyed(self);
     super.Destroyed();
+}
+
+function class<Ammunition> GetAmmunitionClass()
+{
+    if (class'ScrnZedFunc'.default.bLegacyHusk) {
+        return AmmunitionClass;
+    }
+    return class'HuskAmmoG';
 }
 
 function bool IsHeadShot(vector HitLoc, vector ray, float AdditionalScale)

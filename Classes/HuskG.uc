@@ -28,6 +28,11 @@ simulated function PostBeginPlay()
     super.PostBeginPlay();
 }
 
+function class<Ammunition> GetAmmunitionClass()
+{
+    return AmmunitionClass;
+}
+
 
 defaultproperties
 {

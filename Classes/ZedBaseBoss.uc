@@ -62,6 +62,20 @@ function bool IsHeadShot(vector HitLoc, vector ray, float AdditionalScale)
     return class'ScrnZedFunc'.static.IsHeadShot(self, HitLoc, ray, AdditionalScale, vect(0,0,0));
 }
 
+function bool IsHeadShotNoShotAnim(vector HitLoc, vector ray, float AdditionalScale)
+{
+    local bool bResult, bWasShotAnim;
+
+    bWasShotAnim = bShotAnim;
+    if (bShotAnim && Level.NetMode == NM_DedicatedServer && Physics == PHYS_Walking && !bIsCrouched) {
+        // temporarily disable bShotAnim to force bUseAltHeadShotLocation
+        bShotAnim = false;
+    }
+    bResult = class'ScrnZedFunc'.static.IsHeadShot(self, HitLoc, ray, AdditionalScale, vect(0,0,0));
+    bShotAnim = bWasShotAnim;
+    return bResult;
+}
+
 function TakeDamage(int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector momentum, class<DamageType> DamType, optional int HitIndex)
 {
     local float DamagerDistSq;
@@ -301,6 +315,19 @@ state FireMissile
     function bool HitCanInterruptAction()
     {
         return false;
+    }
+
+    function bool IsHeadShot(vector HitLoc, vector ray, float AdditionalScale)
+    {
+        return IsHeadShotNoShotAnim(HitLoc, ray, AdditionalScale);
+    }
+}
+
+state FireChaingun
+{
+    function bool IsHeadShot(vector HitLoc, vector ray, float AdditionalScale)
+    {
+        return IsHeadShotNoShotAnim(HitLoc, ray, AdditionalScale);
     }
 }
 

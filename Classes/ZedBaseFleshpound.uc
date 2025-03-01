@@ -98,7 +98,7 @@ function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector M
     else if ( !bDecapitated && TwoSecondDamageTotal > RageDamageThreshold && !bChargingPlayer
             && !bZapped && (!(bCrispified && bBurnified) || bFrustrated) )
     {
-        if (bShotAnim) {
+        if (bShotAnim && AllowDelayedRage()) {
             if (Level.Game.GameDifficulty >= 5) {
                 // finish the current attack before rage
                 bDelayedCharge = true;
@@ -108,6 +108,11 @@ function TakeDamage( int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector M
             StartCharging();
         }
     }
+}
+
+function bool AllowDelayedRage()
+{
+    return !class'ScrnZedFunc'.default.bLegacyFleshpound;
 }
 
 simulated function ProcessHitFX()

@@ -6,6 +6,8 @@ var config bool bHeadshotSrvFixWalk;
 var config bool bHeadshotSrvFixAttackAndMove;
 var config bool bHeadshotSrvTorsoTwist;
 var config bool bCommandoRevealsStalkers;
+var config bool bLegacyHusk;
+var config bool bLegacyFleshpound;
 
 
 static function bool IsHeadShot(KFMonster M, vector HitLoc, vector ray, float AdditionalScale, vector HeadOffset)
@@ -264,5 +266,5 @@ defaultproperties
     bHeadshotSrvFixWalk=true
     bHeadshotSrvFixAttackAndMove=true
     bHeadshotSrvTorsoTwist=false
-    bCommandoRevealsStalkers=false
+    bCommandoRevealsStalkers=true
 }

@@ -7,6 +7,19 @@
 [NikC-]: http://steamcommunity.com/profiles/76561198044316328
 [Vrana]: https://steamcommunity.com/profiles/76561198021913290
 
+## v9.71.08
+- Fixed HardPat's head hitbox while firing minigun or multiple rockets.
+- ScrnZedPack.ini: `bCommandoRevealsStalkers=true` by default (you can still change it)
+- ScrnZedPack.ini: added `bLegacyHusk` and `bLegacyFleshpound`
+- Legacy Fleshpound starts raging immediately after taking enough damage, while the new one tries to attack the player first if the latter is in melee range.
+- **Grittier Fleshpound** always has the new behaviour, regardless of the `bLegacyFleshpound` setting.
+- The New FP behaviour was hardcoded since v9.69.39. Now, it is configurable.
+- The New **Husk** has the same fireballs as the Grittier Husk, but the former fires only one at a time.
+- New Husk fireballs have collision and can hit players or zeds. Legacy fireballs rely on the splash damage only.
+- **Grittier Scrake** unstuns from 150+ explosive damage. Don't nade Scrakes!
+- **Grittier Scrake** no longer has the slomo rage exploit.
+- **Jason** code cleanup.
+
 ## v9.71
 - Pat dead body stays longer on the map
 - SC/FP dead bodies stay longer at high quality physics settings.

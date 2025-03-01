@@ -2,6 +2,11 @@ class FleshpoundG extends ZedBaseFleshpound;
 
 #exec OBJ LOAD FILE=ScrnZedPack_T.utx
 
+function bool AllowDelayedRage()
+{
+    return true;
+}
+
 defaultproperties
 {
     DetachedArmClass=class'SeveredArmPound'
