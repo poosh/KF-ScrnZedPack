@@ -7,7 +7,8 @@
 [NikC-]: http://steamcommunity.com/profiles/76561198044316328
 [Vrana]: https://steamcommunity.com/profiles/76561198021913290
 
-## v9.71.08
+## v9.71.09
+- Fixed **Tesla Husk** ability to *unweld* doors
 - Fixed HardPat's head hitbox while firing minigun or multiple rockets.
 - ScrnZedPack.ini: `bCommandoRevealsStalkers=true` by default (you can still change it)
 - ScrnZedPack.ini: added `bLegacyHusk` and `bLegacyFleshpound`

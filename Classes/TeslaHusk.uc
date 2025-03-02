@@ -20,6 +20,8 @@ var float EnergyMax;
 var float EnergyRestoreRate;
 
 var()    float              DischargeDamage; // beam damage per second
+var()    float              ZedDamageMult;
+var()    float              UnweldDamage;
 var()    float              MaxDischargeTime;
 var()    float              ChainDamageMult; // how much damage drops on the next chain
 var()    class<DamageType>  MyDamageType;
@@ -211,7 +213,6 @@ function RangedAttack(Actor A)
 {
     local float Dist;
     local KFMonster M;
-    local bool bShoot;
 
     if ( bShotAnim || bDecapitated )
         return;
@@ -243,7 +244,7 @@ function RangedAttack(Actor A)
         if ( Dist < MaxPrimaryBeamRange*(0.7 + 0.3*frand()) )
         {
             IntermediateTarget = none;
-            bShoot = true;
+            DoShoot();
         }
         else if ( (Level.TimeSeconds < NextHealAttemptTime || !TryHealing())
                     && bChainThoughZED && Energy > 50 && Level.TimeSeconds > NextChainZedSearchTime
@@ -257,20 +258,29 @@ function RangedAttack(Actor A)
                             && M.FastTrace(A.Location, M.Location) )
                     {
                         IntermediateTarget = M;
-                        bShoot = true;
+                        DoShoot();
                         break;
                     }
                 }
             }
     }
+}
 
-    if ( bShoot ) {
-        bShotAnim = true;
-        SetAnimAction('ShootBurns');
-        Controller.bPreparingMove = true;
-        Acceleration = vect(0,0,0);
-        NextFireProjectileTime = Level.TimeSeconds + MaxDischargeTime + ProjectileFireInterval * (0.8 + 0.4*frand());
-    }
+function DoShoot()
+{
+    bShotAnim = true;
+    SetAnimAction('ShootBurns');
+    Controller.bPreparingMove = true;
+    Acceleration = vect(0,0,0);
+    NextFireProjectileTime = Level.TimeSeconds + MaxDischargeTime + ProjectileFireInterval * (0.8 + 0.4*frand());
+}
+
+function DoorAttack(Actor A)
+{
+    if (bShotAnim || bDecapitated || Physics == PHYS_Swimming || A == none)
+        return;
+
+    DoShoot();
 }
 
 function Heal(KFMonster Patient, float dt);
@@ -606,7 +616,7 @@ state Shooting
 
     function BeginState()
     {
-        //log(">>> Shooting @ " $ Level.TimeSeconds, 'TeslaHusk');
+        // class'ScrnF'.static.dbg(self, Level.TimeSeconds $ " >>> Shooting Target: " $ Controller.Target);
 
         if ( PrimaryBeam == none ) {
             SpawnPrimaryBeam();
@@ -624,7 +634,7 @@ state Shooting
         local name SeqName;
         local float AnimFrame, AnimRate;
 
-        //log("<<< Shooting @ " $ Level.TimeSeconds, 'TeslaHusk');
+        // class'ScrnF'.static.dbg(self, Level.TimeSeconds $ "<<< Shooting");
 
         FreePrimaryBeam();
         NextChainRebuildTime = 0;
@@ -691,6 +701,7 @@ state Shooting
     {
         local int i;
         local float DmgMult;
+        local KFDoorMover Door;
 
         if ( Beam == none || Beam.EndActor == none || Energy < 0)
             return;
@@ -718,17 +729,22 @@ state Shooting
 
         // deal higher damage to monsters, but do not drain energy quicker
         DmgMult = 1.0;
-        if ( KFMonster(Beam.EndActor) != none ) {
-                DmgMult = 10.0;
-        }
+        Door = KFDoorMover(Beam.EndActor);
         // if pawn is already chained, then damage him until he gets out of the primary range
         Beam.SetBeamLocation(); // ensure that StartEffect and EndEffect are set
-        if ( KFDoorMover(Beam.EndActor) != none ) {
-            Beam.EndActor.TakeDamage(Damage*10.0,Self,Location,vect(0,0,0), class'DamTypeUnWeld');
+        if (Door != none) {
+            Beam.EndActor.TakeDamage(UnweldDamage, Self, Location, vect(0,0,0), class'DamTypeUnWeld');
+            if (!Door.bSealed) {
+                // open door immediately after unweld
+                Door.MyTrigger.Touch(self);
+            }
         }
         else if ( VSizeSquared(Beam.EndEffect - Beam.StartEffect) <= MaxPrimaryBeamRangeSquared * ChainedBeamRangeExtension
                 && FastTrace(Beam.EndEffect, Beam.StartEffect) )
         {
+            if (Beam.EndActor.IsA('KFMonster')) {
+                DmgMult = ZedDamageMult;
+            }
             Beam.EndActor.TakeDamage(Damage*DmgMult, self, Beam.EndActor.Location, Beam.SetBeamRotation(), MyDamageType);
             Energy -= Damage;
 
@@ -755,7 +771,7 @@ state Shooting
             GotoState(''); // out of energy - stop shooting
             return;
         }
-        if ( Controller != none && KFPawn(Controller.Enemy) != none ) {
+        if ( Controller != none && KFDoorMover(Controller.Target) == none && KFPawn(Controller.Enemy) != none ) {
             // stop shooting zeds if there are no players around
             for ( i = 0; i < DischargedActors.length; ++i ) {
                 if ( KFPawn(DischargedActors[i].Victim) != none )
@@ -903,9 +919,12 @@ defaultproperties
     EnergyRestoreRate=8
     ProjectileFireInterval=8.0
     BleedOutDuration=5.0
+    bDistanceAttackingDoor=true
 
     DischargeRate=0.25
-    DischargeDamage=10.00 // 20
+    DischargeDamage=10.00
+    ZedDamageMult=10.0
+    UnweldDamage=150
     MaxDischargeTime=2.5
     ChainDamageMult=0.850 // 0.70
     MaxChainLevel=5
