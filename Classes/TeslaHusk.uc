@@ -301,7 +301,7 @@ function n_SpawnBeam()
         SpawnChildBeam(PrimaryBeam, Controller.Target);
         GotoState('Shooting');
     }
-    else if ( Controller.LineOfSightTo(Controller.Target) ) {
+    else if (Controller.Target.IsA('KFDoorMover') || Controller.LineOfSightTo(Controller.Target) ) {
         SpawnPrimaryBeam();
         PrimaryBeam.EndActor = Controller.Target;
         PrimaryBeam.EffectEndTime = Level.TimeSeconds + MaxDischargeTime;
@@ -634,7 +634,7 @@ state Shooting
         local name SeqName;
         local float AnimFrame, AnimRate;
 
-        // class'ScrnF'.static.dbg(self, Level.TimeSeconds $ "<<< Shooting");
+        // class'ScrnF'.static.dbg(self, Level.TimeSeconds $ " <<< Shooting");
 
         FreePrimaryBeam();
         NextChainRebuildTime = 0;
@@ -919,12 +919,12 @@ defaultproperties
     EnergyRestoreRate=8
     ProjectileFireInterval=8.0
     BleedOutDuration=5.0
-    bDistanceAttackingDoor=true
+    bCanDistanceAttackDoors=true
 
     DischargeRate=0.25
     DischargeDamage=10.00
     ZedDamageMult=10.0
-    UnweldDamage=150
+    UnweldDamage=100
     MaxDischargeTime=2.5
     ChainDamageMult=0.850 // 0.70
     MaxChainLevel=5

@@ -11,7 +11,7 @@ function PostBeginPlay()
 
 defaultproperties
 {
-    VersionNumber=97109
+    VersionNumber=97110
 
     GroupName="KF-ZedPack"
     FriendlyName="ScrN ZED Pack"
