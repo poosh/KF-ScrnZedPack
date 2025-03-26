@@ -31,7 +31,7 @@ var() vector    ShakeViewOffsetMag;
 var() vector    ShakeViewOffsetRate;
 var() float        ShakeViewOffsetTime;
 
-var float PushForce;
+var float PushForce, ZedBumpForce;
 var vector PushAdd; // Used to add additional height to push
 var float RageDamageMul; // Multiplier for hit damage when raging
 var float RageBumpDamage; // Damage done when we hit other specimens while raging
@@ -53,6 +53,10 @@ replication
 simulated function PostBeginPlay()
 {
     super.PostBeginPlay();
+
+    RageBumpDamage *= DifficultyDamageModifer();
+
+
     class'ScrnZedFunc'.static.ZedBeginPlay(self);
 }
 
@@ -444,8 +448,11 @@ Ignores StartCharging;
         KFM = KFMonster(Other);
 
         // Hurt enemies that we run into while raging
-        if (!bShotAnim && KFM != None && Brute(Other) == None && Pawn(Other).Health > 0)
-            Other.TakeDamage(RageBumpDamage, self, Other.Location, Velocity * Other.Mass, class'DamTypePoundCrushed');
+        if (RageBumpDamage > 0 && !bShotAnim && KFM != None && KFM.Health > 0 && !SameSpeciesAs(KFM) && VSizeSquared(Velocity) > 10000) {
+            Other.TakeDamage(RageBumpDamage, self, Other.Location,
+                    (Velocity + PushAdd) * (ZedBumpForce * fmin(Mass / Other.Mass, 3.0)),
+                    class'DamTypePoundCrushed');
+        }
         else Global.Bump(Other);
     }
 
@@ -688,8 +695,9 @@ defaultproperties
     ShakeViewOffsetTime=3.500000
     PushForce=860.000000
     PushAdd=(Z=150.000000)
+    ZedBumpForce=200
     RageDamageMul=1.100000
-    RageBumpDamage=4.000000
+    RageBumpDamage=15
     BlockAddScale=2.500000
     BlockDmgMul=0.100000
     MeleeAnims(0)="BruteAttack1"
@@ -746,7 +754,7 @@ defaultproperties
     Mesh=SkeletalMesh'ScrnZedPack_A.BruteMesh'
     PrePivot=(Z=0.000000)
     Skins(0)=Combiner'ScrnZedPack_T.Brute.Brute_Final'
-    Mass=600.000000
+    Mass=450
     RotationRate=(Yaw=45000,Roll=0)
     DetachedArmClass=Class'SeveredArmBrute'
     DetachedLegClass=Class'SeveredLegBrute'
