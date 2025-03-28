@@ -51,12 +51,17 @@ function TakeDamage(int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector mo
         Super.TakeDamage(Damage, instigatedBy, hitLocation, momentum, DamType);
 }
 
+function bool FlipOver()
+{
+    return class'ScrnZedFunc'.static.FlipOver(self);
+}
+
 simulated function ProcessHitFX()
 {
     super.ProcessHitFX();
 
     // make sure the head is removed from decapitated zeds
-    if (bDecapitated && !bHeadGibbed) {
+    if (bDecapitated && !bHeadGibbed && Health > 0) {
         DecapFX(GetBoneCoords(HeadBone).Origin, rot(0,0,0), false, true);
     }
 }

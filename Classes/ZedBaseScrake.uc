@@ -77,7 +77,7 @@ simulated function ProcessHitFX()
     super.ProcessHitFX();
 
     // make sure the head is removed from decapitated zeds
-    if (bDecapitated && !bHeadGibbed) {
+    if (bDecapitated && !bHeadGibbed && Health > 0) {
         DecapFX(GetBoneCoords(HeadBone).Origin, rot(0,0,0), false, true);
     }
 }
@@ -102,14 +102,11 @@ function bool FlipOver()
     if (bWasFlippedOver && !CanRestun())
         return false;
 
-    bFlippedOver = super.FlipOver();
+    bFlippedOver = class'ScrnZedFunc'.static.FlipOver(self);
     if (bFlippedOver) {
         StunsRemaining = default.StunsRemaining;  // restore the default flich count on stun
         bWasFlippedOver = true;
         LastFlipOverTime = Level.TimeSeconds;
-        // do not rotate while stunned
-        Controller.Focus = none;
-        Controller.FocalPoint = Location + 512*vector(Rotation);
     }
     return bFlippedOver;
 }

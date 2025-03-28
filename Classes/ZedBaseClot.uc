@@ -26,6 +26,11 @@ function TakeDamage(int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector mo
         Super.TakeDamage(Damage, instigatedBy, hitLocation, momentum, DamType);
 }
 
+function bool FlipOver()
+{
+    return class'ScrnZedFunc'.static.FlipOver(self);
+}
+
 function bool CanAttack(Actor A)
 {
     return class'ScrnZedFunc'.static.CanAttack(self, A);

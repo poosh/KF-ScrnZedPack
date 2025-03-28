@@ -424,13 +424,11 @@ function RemoveHead()
 
 function bool FlipOver()
 {
-    if ( super.FlipOver() ) {
-        TeleportBlockTime = Level.TimeSeconds + 4.0; // can't teleport during stun
-        // do not rotate while stunned
-        Controller.Focus = none;
-        Controller.FocalPoint = Location + 512*vector(Rotation);
-    }
-    return false;
+    if (!class'ScrnZedFunc'.static.FlipOver(self))
+        return false;
+    // cannot teleport while stunned
+    TeleportBlockTime = Level.TimeSeconds + 4.0;
+    return true;
 }
 
 function PlayTakeHit(vector HitLocation, int Damage, class<DamageType> DamType)

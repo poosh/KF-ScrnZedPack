@@ -260,6 +260,31 @@ static function bool MeleeDamageTarget(KFMonster M, int hitdamage, vector pushdi
     return true;
 }
 
+static function bool FlipOver(KFMonster M)
+{
+    local KFMonsterController MC;
+
+    MC = KFMonsterController(M.Controller);
+    if (M == none || M.Health <= 0 || MC == none)
+        return false;
+
+    if (M.Physics == PHYS_Falling) {
+        M.SetPhysics(PHYS_Walking);
+    }
+
+    M.bShotAnim = true;
+    M.SetAnimAction('KnockDown');
+    M.Acceleration = vect(0, 0, 0);
+    M.Velocity.X = 0;
+    M.Velocity.Y = 0;
+    MC.GoToState('WaitForAnim');
+    MC.bUseFreezeHack = True;
+    // do not rotate while stunned
+    MC.Focus = none;
+    MC.FocalPoint = M.Location + 512*vector(M.Rotation);
+    return true;
+}
+
 
 defaultproperties
 {
