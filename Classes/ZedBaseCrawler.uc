@@ -74,6 +74,7 @@ function bool MeleeDamageTarget(int hitdamage, vector pushdir)
 defaultproperties
 {
     ControllerClass=class'ZedControllerCrawler'
+    BurnEffect=Class'ScrnMonsterFlame'
     Mass=20
     // Crawler does not have "Jump" animation
     TakeoffAnims(0)="ZombieSpring"

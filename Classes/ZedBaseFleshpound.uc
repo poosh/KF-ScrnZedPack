@@ -162,6 +162,7 @@ State ZombieDying
 defaultproperties
 {
     ControllerClass=class'ZedControllerFleshpound'
+    BurnEffect=Class'ScrnMonsterFlame'
     AvoidAreaClass=class'ZedAvoidArea'
     RagdollLifeSpan=30
 }

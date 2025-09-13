@@ -175,6 +175,7 @@ State ZombieDying
 defaultproperties
 {
     ControllerClass=class'ZedControllerScrake'
+    BurnEffect=Class'ScrnMonsterFlame'
     SawDamage=10
     RagdollLifeSpan=30
     ChargeAnim="ChargeF"

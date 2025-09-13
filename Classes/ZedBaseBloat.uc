@@ -83,6 +83,7 @@ simulated function ProcessHitFX()
 defaultproperties
 {
     ControllerClass=class'ZedController'
+    BurnEffect=Class'ScrnMonsterFlame'
     HeadHealth=50
     PlayerNumHeadHealthScale=0.2
     Mass=500

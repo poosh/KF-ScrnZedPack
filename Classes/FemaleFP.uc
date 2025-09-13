@@ -1063,4 +1063,5 @@ defaultproperties
     RotationRate=(Yaw=45000,Roll=0)
     AvoidAreaClass=class'ZedAvoidArea'
     RagdollLifeSpan=30
+    BurnEffect=Class'ScrnMonsterFlame'
 }

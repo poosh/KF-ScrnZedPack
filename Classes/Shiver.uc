@@ -537,4 +537,5 @@ defaultproperties
     PrePivot=(Z=5.000000)
     Skins(0)=Combiner'ScrnZedPack_T.Shiver.CmbRemoveAlpha'
     RotationRate=(Yaw=45000,Roll=0)
+    BurnEffect=Class'ScrnMonsterFlame'
 }

@@ -768,8 +768,9 @@ defaultproperties
     BurnGroundSpeedMul=0.600000
     HeadHealth=210
     PlayerNumHeadHealthScale=0.15
-    HealthMax=1000.000000
-    Health=1000
+    HealthMax=990
+    Health=990
     MenuName="Brute"
     RagdollLifeSpan=30
+    BurnEffect=Class'ScrnMonsterFlame'
 }

@@ -187,6 +187,7 @@ function RemoveHead()
 defaultproperties
 {
     ControllerClass=class'ZedControllerHusk'
+    BurnEffect=Class'ScrnMonsterFlame'
     AmmunitionClass=class'HuskAmmo'
     MaxMeleeAttacks=2
     ShotsRemaining=1

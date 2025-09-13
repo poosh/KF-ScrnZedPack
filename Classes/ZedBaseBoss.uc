@@ -363,6 +363,7 @@ State ZombieDying
 defaultproperties
 {
     ControllerClass=class'ZedControllerBoss'
+    // BurnEffect=Class'ScrnMonsterFlame'
     AvoidAreaClass=class'ZedAvoidArea'
     RadialRange=150
     RadialDamage=70

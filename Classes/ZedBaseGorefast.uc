@@ -45,4 +45,5 @@ function bool MeleeDamageTarget(int hitdamage, vector pushdir)
 defaultproperties
 {
     ControllerClass=class'ZedControllerGorefast'
+    BurnEffect=Class'ScrnMonsterFlame'
 }

@@ -254,6 +254,7 @@ static function PreCacheMaterials(LevelInfo myLevel)
 defaultproperties
 {
     ControllerClass=class'ZedController'
+    BurnEffect=Class'ScrnMonsterFlame'
     Skins[0]=Combiner'KF_Specimens_Trip_T.stalker_cmb'
     Skins[1]=FinalBlend'KF_Specimens_Trip_T.stalker_fb'
     CloackSkin=Shader'KF_Specimens_Trip_T.stalker_invisible'

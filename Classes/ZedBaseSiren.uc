@@ -200,6 +200,7 @@ ignores AnimEnd, Trigger, Bump, HitWall, HeadVolumeChange, PhysicsVolumeChange, 
 defaultproperties
 {
     ControllerClass=class'ZedControllerSiren'
+    BurnEffect=Class'ScrnMonsterFlame'
     ScreamForce=150000  // made positive (push), invert for pawns, 0 for zeds
     ScreamDamage=6 // lowered scream damage to compensate fixed vortex pull
     ForceScreamTime=7

@@ -66,4 +66,5 @@ simulated function Tick(float DeltaTime)
 defaultproperties
 {
     ControllerClass=class'ZedController'
+    BurnEffect=Class'ScrnMonsterFlame'
 }
