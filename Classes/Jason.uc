@@ -103,6 +103,7 @@ defaultproperties
     ScoringValue=125
     HealthMax=1500.000000
     Health=1500
+    ZapThreshold=2.5
     MenuName="Jason"
     AmbientSound=Sound'ScrnZedPack_S.Jason.Jason_Sound'
     Mesh=SkeletalMesh'ScrnZedPack_A.JasonMesh'

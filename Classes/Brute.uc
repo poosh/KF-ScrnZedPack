@@ -773,4 +773,5 @@ defaultproperties
     MenuName="Brute"
     RagdollLifeSpan=30
     BurnEffect=Class'ScrnMonsterFlame'
+    ZapThreshold=1.5
 }

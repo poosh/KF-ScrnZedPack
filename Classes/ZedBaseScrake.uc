@@ -179,4 +179,5 @@ defaultproperties
     SawDamage=10
     RagdollLifeSpan=30
     ChargeAnim="ChargeF"
+    ZapThreshold=1.75
 }

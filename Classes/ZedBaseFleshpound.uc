@@ -165,4 +165,5 @@ defaultproperties
     BurnEffect=Class'ScrnMonsterFlame'
     AvoidAreaClass=class'ZedAvoidArea'
     RagdollLifeSpan=30
+    ZapThreshold=3.25
 }

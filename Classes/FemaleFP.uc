@@ -965,7 +965,7 @@ defaultproperties
     KFHitRight="Hit"
     StunsRemaining=3
     BleedOutDuration=7.000000
-    ZapThreshold=1.750000
+    ZapThreshold=2.75
     ZappedDamageMod=1.250000
     ZombieFlag=3
     MeleeDamage=30
