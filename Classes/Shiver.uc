@@ -94,13 +94,26 @@ simulated function PostNetReceive()
 
 simulated function StopBurnFX()
 {
-    if (bBurnApplied)
-    {
+    if (bBurnApplied && MatAlphaSkin != none) {
         MatAlphaSkin.Material = Texture'PatchTex.Common.ZedBurnSkin';
         Skins[0] = MatAlphaSkin;
     }
 
     Super.StopBurnFX();
+}
+
+simulated function SetZappedBehavior()
+{
+    super.SetZappedBehavior();
+    Skins[0] = default.Skins[0];
+}
+
+simulated function UnsetZappedBehavior()
+{
+    super.UnsetZappedBehavior();
+    if (MatAlphaSkin != none) {
+        Skins[0] = MatAlphaSkin;
+    }
 }
 
 function RangedAttack(Actor A)
@@ -215,7 +228,7 @@ simulated function Tick(float Delta)
 
     Super.Tick(Delta);
 
-    if ( Role == ROLE_Authority && !bDecapitated && !bBurnApplied && Health > 0 ) {
+    if ( Role == ROLE_Authority && !bDecapitated && !bBurnApplied && !bZapped && Health > 0 ) {
         bSeeEnemyNow = Controller != none && Controller.Enemy != none && Controller.Enemy == Controller.Target
                 && Controller.CanSee(Controller.Enemy);
 
