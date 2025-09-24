@@ -251,46 +251,46 @@ simulated function Tick(float Delta)
         }
     }
 
-    // Handle client-side teleport variables
-    if (!bBurnApplied)
-    {
-        if (Level.NetMode != NM_DedicatedServer && OldFadeStage != FadeStage)
-        {
+    if (FadeStage > 0 || OldFadeStage > 0) {
+        // Handle teleporting
+        if (Level.NetMode != NM_DedicatedServer && OldFadeStage != FadeStage) {
             OldFadeStage = FadeStage;
 
-            if (FadeStage == 2)
+            if (FadeStage == 2) {
                 AlphaFader = 0;
-            else
+            }
+            else {
                 AlphaFader = 255;
+            }
+
+            if (MatAlphaSkin != none)
+                MatAlphaSkin.Color.A = AlphaFader;
         }
 
-        // Handle teleporting
-        if (FadeStage == 1) // Fade out (pre-teleport)
-        {
+        if (FadeStage == 1) {
+            // Fade out (pre-teleport)
             AlphaFader = FMax(AlphaFader - Delta * 512, 0);
 
-            if (Role == ROLE_Authority && AlphaFader == 0)
-            {
+            if (Role == ROLE_Authority && AlphaFader == 0) {
                 SetCollision(true, true);
                 FlashTeleport();
-                SetCollision(false, false);
+                // SetCollision(false, false);
                 FadeStage = 2;
             }
         }
-        else if (FadeStage == 2) // Fade in (post-teleport)
-        {
+        else if (FadeStage == 2) {
+            // Fade in (post-teleport)
             AlphaFader = FMin(AlphaFader + Delta * 512, 255);
 
-            if (Role == ROLE_Authority && AlphaFader == 255)
-            {
+            if (Role == ROLE_Authority && AlphaFader == 255) {
                 FadeStage = 0;
                 SetCollision(true, true);
                 GotoState('Running');
             }
         }
 
-        if (Level.NetMode != NM_DedicatedServer && ColorModifier(Skins[0]) != none)
-            ColorModifier(Skins[0]).Color.A = AlphaFader;
+        if (Level.NetMode != NM_DedicatedServer && MatAlphaSkin != none)
+            MatAlphaSkin.Color.A = AlphaFader;
     }
 }
 
