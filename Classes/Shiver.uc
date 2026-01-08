@@ -358,6 +358,7 @@ function FlashTeleport()
     local float LandTargetDist;
     local int iEndAngle;
     local int iAttempts;
+    local ShopVolume Shop;
 
     if (Controller == none || Controller.Enemy == none)
         return;
@@ -367,13 +368,11 @@ function FlashTeleport()
     RotNew = RotOld;
     OldLoc = Location;
 
-    for (iEndAngle = 0; iEndAngle < MaxTeleportAngles; iEndAngle++)
-    {
+    for (iEndAngle = 0; iEndAngle < MaxTeleportAngles; ++iEndAngle) {
         RotNew = RotOld;
         RotNew.Yaw += iEndAngle * (65536 / MaxTelePortAngles);
 
-        for (iAttempts = 0; iAttempts < MaxTeleportAttempts; iAttempts++)
-        {
+        for (iAttempts = 0; iAttempts < MaxTeleportAttempts; ++iAttempts) {
             LandTargetDist = Target.CollisionRadius + CollisionRadius +
                 MinLandDist + (MaxLandDist - MinLandDist) * (iAttempts / (MaxTeleportAttempts - 1.0));
 
@@ -384,21 +383,22 @@ function FlashTeleport()
                 NewLoc.Z = HitLoc.Z + CollisionHeight;
 
             // Try a new location
-            if (SetLocation(NewLoc))
-            {
-                SetPhysics(PHYS_Walking);
+            if (!SetLocation(NewLoc))
+                continue;
 
-                if (Controller.PointReachable(Target.Location))
-                {
-                    Velocity = vect(0, 0, 0);
-                    Acceleration = vect(0, 0, 0);
-                    SetRotation(rotator(Target.Location - Location));
+            Shop = none;
+            foreach TouchingActors(Class'ShopVolume', Shop) break;
 
-                    PlaySound(Sound'ScrnZedPack_S.Shiver.ShiverWarpGroup', SLOT_Interact, 4.0);
-                    Controller.GotoState('');
-                    MonsterController(Controller).WhatToDoNext(0);
-                    goto Teleported;
-                }
+            SetPhysics(PHYS_Walking);
+            if (Shop == none && Controller.PointReachable(Target.Location)) {
+                Velocity = vect(0, 0, 0);
+                Acceleration = vect(0, 0, 0);
+                SetRotation(rotator(Target.Location - Location));
+
+                PlaySound(Sound'ScrnZedPack_S.Shiver.ShiverWarpGroup', SLOT_Interact, 4.0);
+                Controller.GotoState('');
+                MonsterController(Controller).WhatToDoNext(0);
+                goto Teleported;
             }
 
             // Reset location

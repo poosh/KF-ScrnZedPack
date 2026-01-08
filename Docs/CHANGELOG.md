@@ -7,6 +7,9 @@
 [NikC-]: http://steamcommunity.com/profiles/76561198044316328
 [Vrana]: https://steamcommunity.com/profiles/76561198021913290
 
+## v9.74
+- Fixed an issue when a **Shiver** could teleport and get stuck inside a shop.
+
 ## v9.71.09
 - Fixed **Tesla Husk** ability to *unweld* doors
 - Fixed HardPat's head hitbox while firing minigun or multiple rockets.
