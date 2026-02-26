@@ -16,6 +16,7 @@ var float MinigunSpeedMod;
 var float ChargeMinigunSpeedMod;
 
 var transient float NextMinigunChargeTime;
+var transient int NumRadialAttacks;
 
 replication
 {
@@ -59,12 +60,26 @@ function bool CanRadialAttack()
     if ( super.CanRadialAttack() )
         return true;
 
-    if ( NumPlayersSurrounding > 0 && Level.Game.GameDifficulty >= 5 && Level.Game.NumPlayers > 1 ) {
+    if (NumPlayersClose > 0 && Level.Game.GameDifficulty >= 5 && Level.Game.NumPlayers > 1) {
         h = Health / HealthMax;
         r = frand();
         return r * NumPlayersSurrounding > h * 2.5;
     }
     return false;
+}
+
+function PatriarchRadialTaunt()
+{
+    super.PatriarchRadialTaunt();
+
+    ++NumRadialAttacks;
+    if (NumRadialAttacks > 1 && Level.Game.GameDifficulty >= 5 && (NeedHealing()
+            || (Level.Game.GameDifficulty >= 7 && NumRadialAttacks > (2 - SyringeCount)))) {
+        // Immediately transition to the next state - dan't wait for taunt
+        bShotAnim = false;
+        BossZombieController(Controller).WaitAnimTimeout = 0.0001;  // unfreeze in the next tick
+        GotoNextState();
+    }
 }
 
 function RangedAttack(Actor A)

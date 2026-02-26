@@ -18,6 +18,7 @@ var transient float MaxPrimaryBeamRangeSquared, MaxChildBeamRangeSquared, MaxHea
 var float Energy;
 var float EnergyMax;
 var float EnergyRestoreRate;
+var float EnergyRestoreCooldown;
 
 var()    float              DischargeDamage; // beam damage per second
 var()    float              ZedDamageMult;
@@ -325,7 +326,7 @@ simulated function Tick(float dt)
     super.Tick(dt);
 
     if ( Role == ROLE_Authority ) {
-        if ( Energy < EnergyMax )
+        if (Energy < EnergyMax && Level.TimeSeconds > EnergyRestoreCooldown)
             Energy += EnergyRestoreRate * dt;
 
         if ( Energy > 50 && Level.TimeSeconds > NextHealAttemptTime ) {
@@ -578,6 +579,7 @@ state Healing
         HeadHealthToAdd = min(ceil(HeadHealthMax * HealHeadRate * dt), HeadHealthMax - Patient.HeadHealth);
 
         Energy -= (HealthToAdd + HeadHealthToAdd) * HealEnergyDrain;
+        EnergyRestoreCooldown = Level.TimeSeconds + default.EnergyRestoreCooldown;
         Patient.HeadHealth += HeadHealthToAdd;
         Patient.Health += HealthToAdd;
 
@@ -747,6 +749,7 @@ state Shooting
             }
             Beam.EndActor.TakeDamage(Damage*DmgMult, self, Beam.EndActor.Location, Beam.SetBeamRotation(), MyDamageType);
             Energy -= Damage;
+            EnergyRestoreCooldown = Level.TimeSeconds + default.EnergyRestoreCooldown;
 
             Damage *= ChainDamageMult;
             ChainLevel++;
@@ -917,6 +920,7 @@ defaultproperties
     Energy=100
     EnergyMax=100
     EnergyRestoreRate=8
+    EnergyRestoreCooldown=2.5
     ProjectileFireInterval=8.0
     BleedOutDuration=5.0
     bCanDistanceAttackDoors=true
@@ -931,7 +935,7 @@ defaultproperties
     MaxChainActors=20
     MyDamageType=class'DamTypeTeslaBeam'
     HealRate=0.25
-    HealHeadRate=0.50
+    HealHeadRate=0.15
     HealEnergyDrain=0.05
     EmpDamagePerEnergy=0.65
     EmpDamageMin=30

@@ -6,6 +6,7 @@ var ZedAvoidArea AvoidArea;
 
 var bool bEndGameBoss;  // is this the end-game boss or just spawned mid-game
 var transient int NumPlayersSurrounding;
+var transient int NumPlayersClose;
 var float RadialRange;
 var int RadialDamage;
 var transient int ClawDamageIndex;
@@ -171,6 +172,7 @@ function bool CanRadialAttack()
         return false;
     LastMeleeExploitCheckTime = Level.TimeSeconds + 0.5 + frand();
     NumPlayersSurrounding = 0;
+    NumPlayersClose = 0;
     NumLumberJacks = 0;
     NumNinjas = 0;
 
@@ -179,6 +181,9 @@ function bool CanRadialAttack()
             continue;
 
         NumPlayersSurrounding++;
+        if (VSizeSquared(P.Location - Location) < 10000) {
+            NumPlayersClose++;
+        }
         if( KFMeleeGun(P.Weapon) != none ) {
             if( Axe(P.Weapon) != none || Chainsaw(P.Weapon) != none ) {
                 NumLumberJacks++;

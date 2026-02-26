@@ -7,6 +7,12 @@
 [NikC-]: http://steamcommunity.com/profiles/76561198044316328
 [Vrana]: https://steamcommunity.com/profiles/76561198021913290
 
+## v9.74.17
+- **Tesla Husk**: drastically reduced head healing rate.
+- **Tesla Husk**: Fixed an issue when TH was restoring energy while draining it, which resulted in longer attacks and healings than intended.
+- **Hard Pat**: Radial Attack is performed only if at least one player is really close.
+- **Hard Pat**: (HoE only) Subsequent Radial Attacks are shortened, allowing the boss to follow up with the next attack faster.
+
 ## v9.74
 - Fixed an issue when a **Shiver** could teleport and get stuck inside a shop.
 
