@@ -88,6 +88,9 @@ function RangedAttack(Actor A)
     local bool bOnlyE;
     local bool bDesireChainGun;
 
+    if (Physics == PHYS_Falling)
+        return;  // Landing animation may interrupt transition/prepare animations
+
     // Randomly make him want to chaingun more
     if( Controller.LineOfSightTo(A) && FRand() < 0.15 && LastChainGunTime<Level.TimeSeconds )
     {

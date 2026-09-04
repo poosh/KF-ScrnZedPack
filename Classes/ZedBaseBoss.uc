@@ -77,6 +77,14 @@ function bool IsHeadShotNoShotAnim(vector HitLoc, vector ray, float AdditionalSc
     return bResult;
 }
 
+function RangedAttack(Actor A)
+{
+    if (Physics == PHYS_Falling)
+        return;  // Landing animation may interrupt transition/prepare animations
+
+   super.RangedAttack(A);
+}
+
 function TakeDamage(int Damage, Pawn InstigatedBy, Vector Hitlocation, Vector momentum, class<DamageType> DamType, optional int HitIndex)
 {
     local float DamagerDistSq;
